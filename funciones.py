@@ -1,4 +1,4 @@
-"""Funtions to implements a phasor analysis using spectrals lsm images from Zeica"""
+"""Functions to implements a phasor analysis using spectrals lsm images from Zeica"""
 
 
 def phasor(image_stack):

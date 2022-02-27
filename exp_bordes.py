@@ -1,5 +1,5 @@
 import numpy as np
-import funciones
+import PhasorLibrary
 import tifffile
 import matplotlib.pyplot as plt
 import mpl_scatter_density
@@ -14,15 +14,15 @@ im3 = tifffile.imread(f3)
 f4 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(4).lsm')
 im4 = tifffile.imread(f4)
 
-g1, s1 = funciones.phasor(im1)  # adquiero el g y s de caso 1
-g2, s2 = funciones.phasor(im2)
-g3, s3 = funciones.phasor(im3)
-g4, s4 = funciones.phasor(im4)
+g1, s1 = PhasorLibrary.phasor(im1)  # adquiero el g y s de caso 1
+g2, s2 = PhasorLibrary.phasor(im2)
+g3, s3 = PhasorLibrary.phasor(im3)
+g4, s4 = PhasorLibrary.phasor(im4)
 
 g_avg = (g1 + g2 + g3 + g4) / 4
 s_avg = (s1 + s2 + s3 + s4) / 4
 im = (im1 + im2 + im3 + im4) / 4
-g, s = funciones.phasor(im)
+g, s = PhasorLibrary.phasor(im)
 
 plotty = True
 if plotty:

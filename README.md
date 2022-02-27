@@ -1,28 +1,37 @@
 # MIP
 codigos de la tesis
 
-funciones.py
-	-Contiene las funciones que se describen a continuación 
-		(1) phasor: con la fft obtiene las coordenadas del phasor G y S 
-		(2) data_phasor: devuelve un dict con los datos que usa para cargar y hacer la parte 
-				interactiva hasta calcular g, s y y las g y s filtradas.
-		(3) ph_md: calcula modulo y fase con los g y s que se le da de entrada 
-		(4) histogram_line: parte interaactrica se pincha en dos puntos del plot del phasor y 
-				se obtiene el histograma sobre la linea que los une.
-		(5) interactive: esta funcion es la que se llama y se le pasa los datos g y s y el histograma
-				que ya estaban guardados. On el hist se cortan los pixeles por debajo de un 					determinado valor, y con g y s luego se obtiene el phasor. Ademas muestra la imagen 				promedio y la img promedio de pseudocolor. 
-				
-json_creator.py
-	-Crea un archivo json para almacenar el g y el s calculados. 
+PhasorLibrary.py
 
-main.py 
-	-Llama a la funciones interactivas que muestran el phasor. 
+def phasor(image_stack):
+   """
+   :param image_stack: is a file with spectral mxm images to calculate the fast fourier transform from
+   numpy library.
+   :return: g: is mxm image with the real part of the fft.
+   :return: s: is mxm imaginary with the real part of the fft.
+   :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
+   :return: ph: is the phase between g ans s in degrees.
+   """
 
-metadata.py 
-	-Es un codigo para concatenar los tiles y armar la imagen para luego hacer el g y s, es provisorio ya que 		hay que buscar una forma de hacerlo sin concatenar.
 
-prueba.py
-	-llama el json y hace una prueba graficando
-	
-read_MSW.py 
-	-abre el archivo word y saca el numero de la muestra.
+
+def generate_file(filename, gsa):
+   """
+   :param filename: Type string characters. The name of the file to be written, with the extension ome.tiff
+   :param gsa: Type n-dimensional array holding the data to be stored. It usually has the mxm images of
+   g,s and the average image.
+   :return file: The created file storing the data. If the filename extension was ome.tiff the file is an
+   ome.tiff format.
+   """
+
+def concat_d2(im):
+   """
+   :param im: stack image with the images to be concatenated. It is a specific o 2x2 concatenation.
+   :return: im_concat it is an image stack with the concatenated images.
+   """
+
+def ndmedian(im, filttime=0):
+   """
+   :param im: ndarray usually an image to be filtered.
+   :param filttime: numbers of time to be filtered im.
+   :return: ndarray with the filtered image.  """

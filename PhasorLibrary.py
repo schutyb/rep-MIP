@@ -1,16 +1,8 @@
-"""
-    Functions to implements a phasor analysis using spectral lsm images from Zeica
-"""
-
 import numpy as np
 from tifffile import imwrite, memmap
-
-# ir agregando las import a medida que aparecen
 import matplotlib.pyplot as plt
-from matplotlib.widgets import Cursor, Button
 from matplotlib import colors
-import tifffile
-from skimage.filters import median
+from skimage.filters import median, gaussian
 
 
 def phasor(image_stack):
@@ -25,15 +17,17 @@ def phasor(image_stack):
 
     data = np.fft.fft(image_stack, axis=0)
     dc = data[0].real
+    # change the zeros to the img average
+    dc = np.where(dc != 0, dc, int(np.mean(dc)))
     g = data[1].real
-    g /= dc
+    g /= -dc
     s = data[1].imag
-    s /= dc
+    s /= -dc
 
     md = np.sqrt(g ** 2 + s ** 2)
     ph = np.angle(data[1], deg=True)
 
-    return g, s, md, ph
+    return g, s, md, ph, dc
 
 
 def generate_file(filename, gsa):
@@ -156,31 +150,26 @@ def ndmedian(im, filttime=0):
     return imfilt
 
 
-########################################################################################################################
-########################################################################################################################
-
-
-
-def phasor_plot(img_mean, g1, s1, ic1, img_mean2, g2, s2, ic2):
-    """store the coordinate to plot in the phasor"""
-    x_c1 = []
-    y_c1 = []
-
-    for i in range(0, len(g1)):
-        for j in range(0, len(g1[0])):
-            if img_mean[i][j] > ic1:
-                x_c1.append(g1[i][j])
-                y_c1.append(s1[i][j])
-
-    x_c2 = []
-    y_c2 = []
-
-    """store the coordinate to plot in the phasor"""
-    for i in range(0, len(g2)):
-        for j in range(0, len(g2[0])):
-            if img_mean2[i][j] > ic2:
-                x_c2.append(g2[i][j])
-                y_c2.append(s2[i][j])
+def phasor_plot(img_mean, g, s, icut, title=['Phasor']):
+    """
+    :param img_mean: image stack with all the average images related to each phasor nxn dimension.
+    :param g: nxn dimension image.
+    :param s: nxn dimension image.
+    :param icut: array lenth numbers of g images contains the cut intensity for related to each avg img.
+    :param title: (optional) the title of each phasor
+    :return: the phasor figure and x and y arrays containing the G and S values.
+    """
+    num_phasors = len(img_mean)
+    x = []
+    y = []
+    for k in range(0, len(g)):
+        x.append([])
+        y.append([])
+        for i in range(0, len(g[k])):
+            for j in range(0, len(g[k][0])):
+                if img_mean[k][i][j] > icut[k]:
+                    x[k].append(g[k][i][j])
+                    y[k].append(s[k][i][j])
 
     # built the figure inner and outer circle and the 45 degrees lines in the plot
     x1 = np.linspace(start=-1, stop=1, num=500)
@@ -192,29 +181,32 @@ def phasor_plot(img_mean, g1, s1, ic1, img_mean2, g2, s2, ic2):
     x3 = np.linspace(start=-1, stop=1, num=30)
     x4 = np.linspace(start=-0.7, stop=0.7, num=30)
 
-    fig, (ax1, ax2) = plt.subplots(1, 2)
-    fig.suptitle('Phasor para los dos casos')
+    # create the figures with all the phasors in each axes or create only one phasor
+    if num_phasors > 1:
+        fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
+        fig.suptitle('Phasor')
+        for i in range(num_phasors):
+            ax[i].hist2d(x[i], y[i], bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+            ax[i].plot(x1, list(map(y_positive, x1)), color='darkgoldenrod')
+            ax[i].plot(x1, list(map(y_negative, x1)), color='darkgoldenrod')
+            ax[i].plot(x2, list(map(y_positive2, x2)), color='darkgoldenrod')
+            ax[i].plot(x2, list(map(y_negative2, x2)), color='darkgoldenrod')
+            ax[i].scatter(x3, [0] * len(x3), marker='_', color='darkgoldenrod')
+            ax[i].scatter([0] * len(x3), x3, marker='|', color='darkgoldenrod')
+            ax[i].scatter(x4, x4, marker='_', color='darkgoldenrod')
+            ax[i].scatter(x4, -x4, marker='_', color='darkgoldenrod')
+            ax[i].set_title(title[i])
+    else:
+        fig = plt.figure(1)
+        plt.hist2d(x[0], y[0], bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+        plt.title(title[0])
+        plt.plot(x1, list(map(y_positive, x1)), color='darkgoldenrod')
+        plt.plot(x1, list(map(y_negative, x1)), color='darkgoldenrod')
+        plt.plot(x2, list(map(y_positive2, x2)), color='darkgoldenrod')
+        plt.plot(x2, list(map(y_negative2, x2)), color='darkgoldenrod')
+        plt.scatter(x3, [0] * len(x3), marker='_', color='darkgoldenrod')
+        plt.scatter([0] * len(x3), x3, marker='|', color='darkgoldenrod')
+        plt.scatter(x4, x4, marker='_', color='darkgoldenrod')
+        plt.scatter(x4, -x4, marker='_', color='darkgoldenrod')
 
-    ax1.hist2d(x_c1, y_c1, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
-
-    ax1.plot(x1, list(map(y_positive, x1)), color='darkgoldenrod')
-    ax1.plot(x1, list(map(y_negative, x1)), color='darkgoldenrod')
-    ax1.plot(x2, list(map(y_positive2, x2)), color='darkgoldenrod')
-    ax1.plot(x2, list(map(y_negative2, x2)), color='darkgoldenrod')
-    ax1.scatter(x3, [0] * len(x3), marker='_', color='darkgoldenrod')
-    ax1.scatter([0] * len(x3), x3, marker='|', color='darkgoldenrod')
-    ax1.scatter(x4, x4, marker='_', color='darkgoldenrod')
-    ax1.scatter(x4, -x4, marker='_', color='darkgoldenrod')
-
-    ax2.hist2d(x_c2, y_c2, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
-
-    ax2.plot(x1, list(map(y_positive, x1)), color='darkgoldenrod')
-    ax2.plot(x1, list(map(y_negative, x1)), color='darkgoldenrod')
-    ax2.plot(x2, list(map(y_positive2, x2)), color='darkgoldenrod')
-    ax2.plot(x2, list(map(y_negative2, x2)), color='darkgoldenrod')
-    ax2.scatter(x3, [0] * len(x3), marker='_', color='darkgoldenrod')
-    ax2.scatter([0] * len(x3), x3, marker='|', color='darkgoldenrod')
-    ax2.scatter(x4, x4, marker='_', color='darkgoldenrod')
-    ax2.scatter(x4, -x4, marker='_', color='darkgoldenrod')
-
-    return fig
+    return fig, x, y

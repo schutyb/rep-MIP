@@ -9,7 +9,7 @@ from itertools import cycle
 from matplotlib import colors
 
 
-f1 = str('/home/bruno/Documentos/TESIS/codigos/MIP/nevo_1x1.ome.tif')
+f1 = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/omefile/exp_1x1_melanoma_1.ome.tiff')
 gsa = tifffile.imread(f1)
 g_aux = gsa[0]
 s_aux = gsa[1]
@@ -58,9 +58,9 @@ x4 = np.linspace(start=-0.7, stop=0.7, num=30)
 clustering = True
 if clustering:
 
-    y = KMeans(n_clusters=3).fit_predict(X)
+    y = KMeans(n_clusters=4).fit_predict(X)
 
-    plot_cluster = False
+    plot_cluster = True
     if plot_cluster:
         plt.figure(1)
         plt.scatter(X[:, 0], X[:, 1], c=y)
@@ -79,7 +79,7 @@ if clustering:
 
 
 #  grafico el phasor con g y s
-phasor = False
+phasor = True
 if phasor:
     x_aux = X[0:, 0:1]
     y_aux = X[0:, 1:2]
@@ -113,18 +113,8 @@ if coloring:
 
 plt.figure(3)
 plt.imshow(y_img, cmap='nipy_spectral')
-plt.title("Spectral coloring image")
-plt.show()
+plt.title("Spectral colored image")
 
-plt.figure(4)
-plt.imshow(y_img, cmap='Blues')
-plt.title("Blue")
+plt.imsave('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/omefile/color.png', y_img)
 
-plt.figure(5)
-plt.imshow(y_img, cmap='Reds')
-plt.title("Red")
-
-plt.figure(6)
-plt.imshow(y_img, cmap='Greens')
-plt.title("Green")
 plt.show()

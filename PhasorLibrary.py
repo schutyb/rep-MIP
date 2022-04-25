@@ -32,8 +32,9 @@ def phasor(image_stack, harmonic=1):
 
     md = np.sqrt(g ** 2 + s ** 2)
     ph = np.angle(data[harmonic], deg=True)
+    avg = np.mean(image_stack, axis=0)
 
-    return g, s, md, ph, dc
+    return g, s, md, ph, avg
 
 
 def generate_file(filename, gsa):
@@ -54,7 +55,7 @@ def generate_file(filename, gsa):
 
 def concat_d2(im):
     """
-        Concatenate an tile image whose dimension is 2x2
+        Concatenate a stack of images whose dimension is 2x2xn
 
     :param im: stack image with the images to be concatenated. It is a specific 2x2 concatenation.
     :return: im_concat it is an image stack with the concatenated images.
@@ -62,7 +63,7 @@ def concat_d2(im):
 
     im_concat = []
 
-    # Caso 1 donde es na imagen de 4 partes y un solo canal
+    # Caso 1 donde es una imagen de 4 partes y un solo canal
     if len(im.shape) == 3 and im.shape[0] == 4:
         d = 1024
         l = int(d * 0.05)

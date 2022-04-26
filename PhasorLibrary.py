@@ -293,6 +293,8 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
     return fig
 
 
+
+
 def interactive(dc, g, s, Ro):
     """
         This function plot the avg image, its histogram, the phasors and the rbg pseudocolor image.

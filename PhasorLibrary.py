@@ -14,17 +14,18 @@ def phasor(image_stack, harmonic=1):
     :param image_stack: is a file with spectral mxm images to calculate the fast fourier transform from
     numpy library.
     :param harmonic: int. The number of the harmonic where the phasor is calculated.
+    :return: avg: is the average intensity image
     :return: g: is mxm image with the real part of the fft.
     :return: s: is mxm imaginary with the real part of the fft.
     :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
-    :return: ph: is the phase between g ans s in degrees.
-    :return: dc: is the average intensity image
+    :return: ph: is the phase between g and s in degrees.
     """
 
     data = np.fft.fft(image_stack, axis=0)
+
     dc = data[0].real
-    # change the zeros to the img average
-    dc = np.where(dc != 0, dc, int(np.mean(dc)))
+    dc = np.where(dc != 0, dc, int(np.mean(dc)))  # change the zeros to the img average
+
     g = data[harmonic].real
     g /= -dc
     s = data[harmonic].imag
@@ -34,7 +35,34 @@ def phasor(image_stack, harmonic=1):
     ph = np.angle(data[harmonic], deg=True)
     avg = np.mean(image_stack, axis=0)
 
-    return g, s, md, ph, avg
+    return avg, g, s, md, ph
+
+
+def phasor_tile(im_stack, dimx, dimy):
+    """
+        This funtion compute the fft and calculate the phasor for an stack contaning many tiles
+        of microscopy images.
+
+    :param dimy: images horizontal dimension
+    :param dimx: images vertical dimension
+    :param im_stack: image stack containing the n lambda channels
+    :return: avg: is the average intensity image
+    :return: g: is mxm image with the real part of the fft.
+    :return: s: is mxm imaginary with the real part of the fft.
+    :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
+    :return: ph: is the phase between g and s in degrees.
+    """
+
+    dc = np.zeros([len(im_stack), dimx, dimy])
+    g = np.zeros([len(im_stack), dimx, dimy])
+    s = np.zeros([len(im_stack), dimx, dimy])
+    md = np.zeros([len(im_stack), dimx, dimy])
+    ph = np.zeros([len(im_stack), dimx, dimy])
+
+    for i in range(len(im_stack)):
+        dc[i], g[i], s[i], md[i], ph[i] = phasor(im_stack[i], harmonic=1)
+
+    return dc, g, s, md, ph
 
 
 def generate_file(filename, gsa):

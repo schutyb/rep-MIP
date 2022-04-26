@@ -1,10 +1,11 @@
 import numpy as np
-import PhasorLibrary
 import tifffile
 import matplotlib.pyplot as plt
 from skimage.filters import median, gaussian
 import matplotlib.cm as cm
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+import PhasorPy as Ph
+
 
 ''' 
     Define the file name and route as string which is the image or image stack we will read with tifffile module.
@@ -13,7 +14,7 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 '''
 
 froute = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
-fname = str('exp_1x1_melanoma_2.lsm')
+fname = str('exp_1x1_melanoma_1.lsm')
 f = froute + fname
 im = tifffile.imread(f)
 
@@ -23,7 +24,7 @@ im = tifffile.imread(f)
     and the histogram of the average image. 
 '''
 
-g_true, s_true, md, ph, _ = PhasorLibrary.phasor(im)
+g_true, s_true, md, ph, dc = Ph.phasor(im, harmonic=1)
 bins = np.arange(0, 255, 1)
 im_avg = np.mean(im, axis=0)  # get the average image
 hist, _ = np.histogram(im_avg, bins)
@@ -67,25 +68,25 @@ for i in range(0, d):
 
 # Concateno las imagenes im1 a im4 para luego hacer el phasor
 im_aux = np.asarray([im1, im2, im3, im4])
-img_concat = PhasorLibrary.concat_d2(im_aux)
+img_concat = Ph.concat_d2(im_aux)
 
 # Adquiero el g y el s de la imagen concatenada antes
-g_concat, s_concat, _, _, _ = PhasorLibrary.phasor(img_concat)
+g_concat, s_concat, _, _, _ = Ph.phasor(img_concat, harmonic=1)
 
 '''
     En esta parte calculo el g y s por patches. Calculo el gi y si de cada uno de los 4 cuadrantes, promediando 
     las zonas de solapamiento para obtener un solo g y s. 
 '''
-g1, s1, _, _, _ = PhasorLibrary.phasor(im1)
-g2, s2, _, _, _ = PhasorLibrary.phasor(im2)
-g3, s3, _, _, _ = PhasorLibrary.phasor(im3)
-g4, s4, _, _, _ = PhasorLibrary.phasor(im4)
+g1, s1, _, _, _ = Ph.phasor(im1, harmonic=1)
+g2, s2, _, _, _ = Ph.phasor(im2, harmonic=1)
+g3, s3, _, _, _ = Ph.phasor(im3, harmonic=1)
+g4, s4, _, _, _ = Ph.phasor(im4, harmonic=1)
 
 # concateno y promedio los gi y si
 g_aux = np.asarray([g1, g2, g3, g4])
-g_fft = PhasorLibrary.concat_d2(g_aux)
+g_fft = Ph.concat_d2(g_aux)
 s_aux = np.asarray([s1, s2, s3, s4])
-s_fft = PhasorLibrary.concat_d2(s_aux)
+s_fft = Ph.concat_d2(s_aux)
 
 '''
     Ahora tengo:
@@ -180,7 +181,7 @@ if err:
         print('Potencia del error en las intersecciones para S fft', pot_sf)
         print('------------------------------------------------------------------------------------------')
         print('Diferencia de potencias entre gc y gf', abs(pot_gc - pot_gf))
-        print('Diferencia de potencias entre gc y gf', abs(pot_sc - pot_sf))
+        print('Diferencia de potencias entre sc y sf', abs(pot_sc - pot_sf))
 
 plot_phasor = True  # grafico el phasor de cada caso
 if plot_phasor:
@@ -189,7 +190,6 @@ if plot_phasor:
     s = [s_true, s_concat, s_fft]
     icut = [3, 3, 3]
     titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
-    fig, x, y = PhasorLibrary.phasor_plot(avg, g, s, icut, titles)
+    fig, _, _ = Ph.phasor_plot(avg, g, s, icut, titles)
 
 plt.show()
-

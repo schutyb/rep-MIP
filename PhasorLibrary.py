@@ -14,17 +14,31 @@ def phasor(image_stack, harmonic=1):
     :param image_stack: is a file with spectral mxm images to calculate the fast fourier transform from
     numpy library.
     :param harmonic: int. The number of the harmonic where the phasor is calculated.
+<<<<<<< HEAD
     :return: g: is mxm image with the real part of the fft.
     :return: s: is mxm imaginary with the real part of the fft.
     :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
     :return: ph: is the phase between g ans s in degrees.
     :return: dc: is the average intensity image
+=======
+    :return: avg: is the average intensity image
+    :return: g: is mxm image with the real part of the fft.
+    :return: s: is mxm imaginary with the real part of the fft.
+    :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
+    :return: ph: is the phase between g and s in degrees.
+>>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
     """
 
     data = np.fft.fft(image_stack, axis=0)
+
     dc = data[0].real
+<<<<<<< HEAD
     # change the zeros to the img average
     dc = np.where(dc != 0, dc, int(np.mean(dc)))
+=======
+    dc = np.where(dc != 0, dc, int(np.mean(dc)))  # change the zeros to the img average
+
+>>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
     g = data[harmonic].real
     g /= -dc
     s = data[harmonic].imag
@@ -32,8 +46,39 @@ def phasor(image_stack, harmonic=1):
 
     md = np.sqrt(g ** 2 + s ** 2)
     ph = np.angle(data[harmonic], deg=True)
+<<<<<<< HEAD
+=======
+    avg = np.mean(image_stack, axis=0)
 
-    return g, s, md, ph, dc
+    return avg, g, s, md, ph
+
+
+def phasor_tile(im_stack, dimx, dimy):
+    """
+        This funtion compute the fft and calculate the phasor for an stack contaning many tiles
+        of microscopy images.
+
+    :param dimy: images horizontal dimension
+    :param dimx: images vertical dimension
+    :param im_stack: image stack containing the n lambda channels
+    :return: avg: is the average intensity image
+    :return: g: is mxm image with the real part of the fft.
+    :return: s: is mxm imaginary with the real part of the fft.
+    :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
+    :return: ph: is the phase between g and s in degrees.
+    """
+>>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
+
+    dc = np.zeros([len(im_stack), dimx, dimy])
+    g = np.zeros([len(im_stack), dimx, dimy])
+    s = np.zeros([len(im_stack), dimx, dimy])
+    md = np.zeros([len(im_stack), dimx, dimy])
+    ph = np.zeros([len(im_stack), dimx, dimy])
+
+    for i in range(len(im_stack)):
+        dc[i], g[i], s[i], md[i], ph[i] = phasor(im_stack[i], harmonic=1)
+
+    return dc, g, s, md, ph
 
 
 def generate_file(filename, gsa):
@@ -54,7 +99,11 @@ def generate_file(filename, gsa):
 
 def concat_d2(im):
     """
+<<<<<<< HEAD
         Concatenate an tile image whose dimension is 2x2
+=======
+        Concatenate a stack of images whose dimension is 2x2xn
+>>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 
     :param im: stack image with the images to be concatenated. It is a specific 2x2 concatenation.
     :return: im_concat it is an image stack with the concatenated images.
@@ -62,7 +111,7 @@ def concat_d2(im):
 
     im_concat = []
 
-    # Caso 1 donde es na imagen de 4 partes y un solo canal
+    # Caso 1 donde es una imagen de 4 partes y un solo canal
     if len(im.shape) == 3 and im.shape[0] == 4:
         d = 1024
         l = int(d * 0.05)
@@ -169,6 +218,7 @@ def histogram_filtering(dc, g, s, ic):
     :param s:  ndarray. S image.
     :param ic: intensity cut umbral.
     :return: x, y. Arrays contain the G and S phasor coordinates.
+<<<<<<< HEAD
     """
     """store the coordinate to plot in the phasor"""
     aux = np.concatenate(np.where(dc > ic, dc, np.zeros(dc.shape)))
@@ -187,6 +237,26 @@ def phasor_circle(ax):
     :param ax: axis where to plot the phasor circle.
     :return: the axis with the added circle.
     """
+=======
+    """
+    """store the coordinate to plot in the phasor"""
+    aux = np.concatenate(np.where(dc > ic, dc, np.zeros(dc.shape)))
+    g2 = np.concatenate(g)
+    s2 = np.concatenate(s)
+    x = np.delete(g2, np.where(aux == 0))
+    y = np.delete(s2, np.where(aux == 0))
+
+    return x, y
+
+
+def phasor_circle(ax):
+    """
+        Built the figure inner and outer circle and the 45 degrees lines in the plot
+
+    :param ax: axis where to plot the phasor circle.
+    :return: the axis with the added circle.
+    """
+>>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 
     x1 = np.linspace(start=-1, stop=1, num=500)
     yp1 = lambda x1: np.sqrt(1 - x1 ** 2)
@@ -293,8 +363,11 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
     return fig
 
 
+<<<<<<< HEAD
 
 
+=======
+>>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 def interactive(dc, g, s, Ro):
     """
         This function plot the avg image, its histogram, the phasors and the rbg pseudocolor image.
@@ -423,3 +496,4 @@ def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
             print(mf[i][0], '\t\t', mf[i][1])
 
     return ax
+

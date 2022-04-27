@@ -1,12 +1,9 @@
 import numpy as np
-<<<<<<< HEAD
-import PhasorLibrary
-=======
 import PhasorLibrary as Ph
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 import tifffile
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
+
 
 '''
 En este codigo utilizo imagenes con diferentes promedios para comparar
@@ -14,15 +11,6 @@ calculo los g y s con 16 promedios y los tomo como gold standr y luego calculo c
 '''
 
 #  The 16 averages is the gold standar
-<<<<<<< HEAD
-file = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_avg/test_16_mean.lsm')
-gs = tifffile.imread(file)
-g, s, _, _, dc = PhasorLibrary.phasor(gs, harmonic=1)
-
-
-fig = PhasorLibrary.interactive(dc, g, s, 0.2)
-
-=======
 file = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/exp_avg/test_16_mean.lsm')
 im = tifffile.imread(file)
 g, s, _, _, dc = Ph.phasor(im, harmonic=1)
@@ -119,4 +107,3 @@ ax1.set_title("Gold standar Intensity")
 ax2.set_title("Experimental Intensity")
 
 plt.show()
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400

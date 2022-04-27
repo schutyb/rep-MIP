@@ -2,13 +2,8 @@ import numpy as np
 import tifffile
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
-<<<<<<< HEAD
-import PhasorPy as Ph
-
-=======
 import PhasorLibrary as Ph
 import PhasorPy as phasorPy
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 
 ''' 
     Define the file name and route as string which is the image or image stack we will read with tifffile module.
@@ -16,11 +11,7 @@ import PhasorPy as phasorPy
     the im is a numpy.ndarray with the image stack. 
 '''
 
-<<<<<<< HEAD
-froute = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
-=======
 froute = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 fname = str('exp_1x1_melanoma_1.lsm')
 f = froute + fname
 im = tifffile.imread(f)
@@ -197,10 +188,6 @@ if plot_phasor:
     s = [s_true, s_concat, s_fft]
     icut = [3, 3, 3]
     titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
-<<<<<<< HEAD
-    fig, _, _ = Ph.phasor_plot(avg, g, s, icut, titles)
-=======
     fig, _, _ = phasorPy.phasor_plot(avg, g, s, icut, titles)
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 
 plt.show()

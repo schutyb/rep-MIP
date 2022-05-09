@@ -3,46 +3,73 @@ import PhasorLibrary as phlib
 import tifffile
 import matplotlib.pyplot as plt
 from tifffile import imwrite, memmap
+import cv2
+
 
 '''En este codigo voy a probar como llego al phasor de la 2x2, entonces voy a usar una imagen 2x2 y calcular el phasor
 de cada canal y luego concatenar g, s, md, ph y dc. Además con esto ya pruebo guardar el ome.tiff comun y el 
 comprimido'''
 
-f1 = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/caso_18370/18370/18370_SP_Tile_2x2_b.lsm')
-f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/NEVOS/15410_SP_Tile_4x4.lsm')
-# f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/16400_SP_Tile_12x8.lsm')
-im = tifffile.imread(f1)
+
+# f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/caso_18370/lsm/18370_SP_Tile_2x2_b.lsm')
+# f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/16952_SP_Tile_4x3.lsm')
+# f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/19686_SP_Tile_7x4.lsm')
+# f1 = str('/home/bruno/Documentos/TESIS/TESIS/3x3_2avg.lsm')
+# im = tifffile.imread(f1)
 
 # Phasor tile
-dc, g, s, md, ph = phlib.phasor_tile(im, 1024, 1024)
+# dc, g, s, md, ph = phlib.phasor_tile(im, 1024, 1024)
 
 
-def concatenate(im, m, n):
-    d = im.shape[2]
-    aux = np.zeros([m * d, n * d])  # store the concatenated image
+def concatenate(im, m, n, per=0.05):
+    d = im.shape[1]
+    aux = np.zeros([d * m, d * n])  # store the concatenated image
 
+    # Horizontal concatenate
     i = 0
-    while i < m:
-
-        # In this part concatenate the first two images of every raw in the tile image
-        aux_mean = (im[i][0:, int(0.95 * d):d] + im[i + 1][0:, 0:int(0.05 * d + 1)]) / 2
-        aux[i * d: i * d + d, 0:int(0.95 * d)] = im[i][0:, 0:int(0.95 * d)]
-        aux[i * d: i * d + d, int(0.95 * d):d] = aux_mean
-        aux[i * d: i * d + d, d:2 * d - int(0.05 * d)] = im[i + 1][0:, int(0.05 * d):d]
-
-        # here it is concatenate the rest of the raw
-        cont = 2
-        while cont < n:
-            aux_mean = (aux[i * d: i * d + d, d * cont - int(0.05 * d):d * cont] + im[i + cont][0:, 0:int(
-                0.05 * d)]) / 2
-            aux[i * d: i * d + d, d * cont - int(0.05 * d):d * cont] = aux_mean
-            aux[i * d: i * d + d, d * cont:d * (cont + 1)] = im[i + cont][0:, int(0.05 * d):d]
-            cont = cont + 1
-
+    j = 0
+    while j < m * n:
+        aux[i * d: i * d + d, 0:d] = im[j][0:, 0:d]  # store the first image horizontally
+        k = 1
+        acum = 0
+        while k < n:
+            ind1 = round(((1 - per) + acum) * d)
+            ind2 = round(ind1 + per * d)
+            ind3 = round(ind2 + (1 - per) * d)
+            aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + k][0:, 0:round(per * d)]) / 2
+            aux[i * d:i * d + d, ind2:ind3] = im[j + k][0:, round(per * d):d]
+            acum = (1 - per) + acum
+            k = k + 1
         i = i + 1
+        j = j + n
 
-    # cuando termina este for concateno hacia abajo
-    return aux
+    # Vertical concatenate
+    img = np.zeros([round(d * (m - per * (m - 1))), round(d * (n - per * (n - 1)))])
+    img[0:d, 0:] = aux[0:d, 0:img.shape[1]]
+    k = 1
+    acum = 0
+    while k < m:
+        ind1 = round(((1 - per) + acum) * d)
+        ind2 = round(ind1 + per * d)
+        ind3 = round(ind2 + per * d)
+        ind4 = round(ind3 + (1 - per) * d)
+
+        img[ind1:ind2, 0:] = (aux[ind1:ind2, 0:img.shape[1]] + aux[ind2:ind3, 0:img.shape[1]]) / 2
+        img[ind3:ind4, 0:] = aux[ind3:ind4, 0:img.shape[1]]
+        acum = (1 - per) + acum
+        k = k + 1
+
+    return img
 
 
-aux = concatenate(dc, 4, 4)
+i1 = cv2.imread('/home/bruno/Documentos/TESIS/gris.png', cv2.IMREAD_GRAYSCALE)
+i2 = cv2.imread('/home/bruno/Documentos/TESIS/negro.png', cv2.IMREAD_GRAYSCALE)
+dc = np.asarray([i1, i2, i1, i2, i2, i1, i2, i1, i1, i2, i1, i2, i2, i1, i2, i1])
+
+dc1 = concatenate(dc, 4, 4)
+# g1 = concatenate(g, 3, 4)
+# s1 = concatenate(s, 3, 4)
+
+plt.figure(1)
+plt.imshow(dc1, cmap='gray')
+plt.show()

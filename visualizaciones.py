@@ -1,30 +1,24 @@
-<<<<<<< HEAD
 import tifffile
 import PhasorLibrary as Ph
 import numpy as np
-=======
-import PhasorPy as Ph
+import PhasorPy
 import tifffile
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
 
 
-froute = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
-fname = str('exp_1x1_nevo_2.lsm')
-f = froute + fname
-<<<<<<< HEAD
+# f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/16952_SP_Tile_4x3.lsm')
+f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/15477_SP_Tile_6x3.lsm')
+# f1 = str('/home/bruno/Documentos/TESIS/TESIS/3x3_2avg.lsm')
+im = tifffile.imread(f1)
 
-f = str('/home/bruno/Descargas/Image 4.lsm')
-im = tifffile.imread(f)
+# Phasor tile
+dc1, g1, s1, _, _ = Ph.phasor_tile(im, 1024, 1024)
 
-g, s, _, _, dc = Ph.phasor(im, harmonic=1)
-dc = np.mean(im, axis=0)
-=======
-im = tifffile.imread(f)
+dc = Ph.concatenate(dc1, 3, 6)
+g = Ph.concatenate(g1, 3, 6)
+s = Ph.concatenate(s1, 3, 6)
 
-g, s, _, _, dc = Ph.phasor(im, harmonic=1)
->>>>>>> 3807f6715f860870b572ec19ee71c7c3f602a400
-for i in range(5):
-    Ph.interactive(dc, g, s, 0.1)
+for i in range(2):
+    PhasorPy.interactive(dc, g, s, 0.3)
 
 
 """g = np.zeros([im.shape[0], im.shape[2], im.shape[3]])

@@ -11,7 +11,7 @@ import PhasorPy as phasorPy
     the im is a numpy.ndarray with the image stack. 
 '''
 
-froute = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
+froute = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
 fname = str('exp_1x1_melanoma_1.lsm')
 f = froute + fname
 im = tifffile.imread(f)
@@ -22,7 +22,7 @@ im = tifffile.imread(f)
     and the histogram of the average image. 
 '''
 
-g_true, s_true, md, ph, dc = Ph.phasor(im, harmonic=1)
+dc, g_true, s_true, md, ph = Ph.phasor(im, harmonic=1)
 bins = np.arange(0, 255, 1)
 im_avg = np.mean(im, axis=0)  # get the average image
 hist, _ = np.histogram(im_avg, bins)
@@ -69,16 +69,16 @@ im_aux = np.asarray([im1, im2, im3, im4])
 img_concat = Ph.concat_d2(im_aux)
 
 # Adquiero el g y el s de la imagen concatenada antes
-g_concat, s_concat, _, _, _ = Ph.phasor(img_concat, harmonic=1)
+_, g_concat, s_concat, _, _ = Ph.phasor(img_concat, harmonic=1)
 
 '''
     En esta parte calculo el g y s por patches. Calculo el gi y si de cada uno de los 4 cuadrantes, promediando 
     las zonas de solapamiento para obtener un solo g y s. 
 '''
-g1, s1, _, _, _ = Ph.phasor(im1, harmonic=1)
-g2, s2, _, _, _ = Ph.phasor(im2, harmonic=1)
-g3, s3, _, _, _ = Ph.phasor(im3, harmonic=1)
-g4, s4, _, _, _ = Ph.phasor(im4, harmonic=1)
+_, g1, s1, _, _ = Ph.phasor(im1, harmonic=1)
+_, g2, s2, _, _ = Ph.phasor(im2, harmonic=1)
+_, g3, s3, _, _ = Ph.phasor(im3, harmonic=1)
+_, g4, s4, _, _ = Ph.phasor(im4, harmonic=1)
 
 # concateno y promedio los gi y si
 g_aux = np.asarray([g1, g2, g3, g4])

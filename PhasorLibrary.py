@@ -451,3 +451,54 @@ def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
 
     return ax
 
+
+def concatenate(im, m, n, per=0.05):
+    """
+        This function concatenate a stack image from mxn images create an m x n only image.
+    :param im: image stack to be concatenate, containing mxn images. The dimension is 1 x (nxm).
+    :param m: number of vertical images
+    :param n: number of horizontal images
+    :param per: percentage of overlap
+    :return: concatenated image
+    """
+    d = im.shape[1]
+    aux = np.zeros([d * m, d * n])  # store the concatenated image
+
+    # Horizontal concatenate
+    i = 0
+    j = 0
+    while j < m * n:
+        aux[i * d: i * d + d, 0:d] = im[j][0:, 0:d]  # store the first image horizontally
+        k = 1
+        acum = 0
+        while k < n:
+            ind1 = round(((1 - per) + acum) * d)
+            ind2 = round(ind1 + per * d)
+            ind3 = round(ind2 + (1 - per) * d)
+            aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + k][0:, 0:round(per * d)]) / 2
+            aux[i * d:i * d + d, ind2:ind3] = im[j + k][0:, round(per * d):d]
+            acum = (1 - per) + acum
+            k = k + 1
+        i = i + 1
+        j = j + n
+
+    # Vertical concatenate
+    img = np.zeros([round(d * (m - per * (m - 1))), round(d * (n - per * (n - 1)))])
+    img[0:d, 0:] = aux[0:d, 0:img.shape[1]]
+    k = 1
+    while k < m:
+        #  indices de la matrix aux para promediar las intersecciones
+        ind1 = round(d * (k - per))
+        ind2 = round(d * k)
+        ind3 = round(d * (k + per))
+        ind4 = round(d * (k + 1))
+        #  indices de la nueva matriz donde se almacena la imagen final
+        i1 = round(k * d * (1 - per))
+        i2 = round(i1 + d * per)
+        i3 = round(i2 + d * (1 - per))
+
+        img[i1:i2, 0:] = (aux[ind1:ind2, 0:img.shape[1]] + aux[ind2:ind3, 0:img.shape[1]]) / 2
+        img[i2:i3, 0:] = aux[ind3:ind4, 0:img.shape[1]]
+        k = k + 1
+
+    return img

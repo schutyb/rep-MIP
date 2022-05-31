@@ -3,7 +3,7 @@ import tifffile
 import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1 import make_axes_locatable
 import PhasorLibrary as Ph
-import PhasorPy as phasorPy
+
 
 ''' 
     Define the file name and route as string which is the image or image stack we will read with tifffile module.
@@ -11,7 +11,7 @@ import PhasorPy as phasorPy
     the im is a numpy.ndarray with the image stack. 
 '''
 
-froute = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/exp_bordes/img_1x1/lsm/')
+froute = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp bordes/lsm/')
 fname = str('exp_1x1_melanoma_1.lsm')
 f = froute + fname
 im = tifffile.imread(f)
@@ -22,10 +22,9 @@ im = tifffile.imread(f)
     and the histogram of the average image. 
 '''
 
-g_true, s_true, md, ph, dc = Ph.phasor(im, harmonic=1)
+dc, g_true, s_true, md, ph = Ph.phasor(im, harmonic=1)
 bins = np.arange(0, 255, 1)
-im_avg = np.mean(im, axis=0)  # get the average image
-hist, _ = np.histogram(im_avg, bins)
+hist, _ = np.histogram(dc, bins)
 
 '''
     defino cuatro imagenes a partir de una  con un 5 % de solapamiento
@@ -69,16 +68,16 @@ im_aux = np.asarray([im1, im2, im3, im4])
 img_concat = Ph.concat_d2(im_aux)
 
 # Adquiero el g y el s de la imagen concatenada antes
-g_concat, s_concat, _, _, _ = Ph.phasor(img_concat, harmonic=1)
+_, g_concat, s_concat, _, _ = Ph.phasor(img_concat)
 
 '''
     En esta parte calculo el g y s por patches. Calculo el gi y si de cada uno de los 4 cuadrantes, promediando 
     las zonas de solapamiento para obtener un solo g y s. 
 '''
-g1, s1, _, _, _ = Ph.phasor(im1, harmonic=1)
-g2, s2, _, _, _ = Ph.phasor(im2, harmonic=1)
-g3, s3, _, _, _ = Ph.phasor(im3, harmonic=1)
-g4, s4, _, _, _ = Ph.phasor(im4, harmonic=1)
+_, g1, s1, _, _ = Ph.phasor(im1)
+_, g2, s2, _, _ = Ph.phasor(im2)
+_, g3, s3, _, _ = Ph.phasor(im3)
+_, g4, s4, _, _ = Ph.phasor(im4)
 
 # concateno y promedio los gi y si
 g_aux = np.asarray([g1, g2, g3, g4])
@@ -105,28 +104,28 @@ if err:
     if plot_err:
         fig = plt.figure(figsize=(10, 8))
         ax1 = fig.add_subplot(221)
-        im1 = ax1.imshow(egc, interpolation='None')
+        im1 = ax1.imshow(egc, cmap='gray', interpolation='None')
 
         divider = make_axes_locatable(ax1)
         cax = divider.append_axes('right', size='5%', pad=0.05)
         fig.colorbar(im1, cax=cax, orientation='vertical')
 
         ax2 = fig.add_subplot(222)
-        im2 = ax2.imshow(egf, interpolation='None')
+        im2 = ax2.imshow(egf, cmap='gray', interpolation='None')
 
         divider = make_axes_locatable(ax2)
         cax = divider.append_axes('right', size='5%', pad=0.05)
         fig.colorbar(im2, cax=cax, orientation='vertical')
 
         ax3 = fig.add_subplot(223)
-        im3 = ax3.imshow(esc, interpolation='None')
+        im3 = ax3.imshow(esc, cmap='gray', interpolation='None')
 
         divider = make_axes_locatable(ax3)
         cax = divider.append_axes('right', size='5%', pad=0.05)
         fig.colorbar(im3, cax=cax, orientation='vertical')
 
         ax4 = fig.add_subplot(224)
-        im4 = ax4.imshow(esf, interpolation='None')
+        im4 = ax4.imshow(esf, cmap='gray', interpolation='None')
 
         divider = make_axes_locatable(ax4)
         cax = divider.append_axes('right', size='5%', pad=0.05)
@@ -183,11 +182,11 @@ if err:
 
 plot_phasor = True  # grafico el phasor de cada caso
 if plot_phasor:
-    avg = [im_avg, im_avg, im_avg]
+    avg = [dc, dc, dc]
     g = [g_true, g_concat, g_fft]
     s = [s_true, s_concat, s_fft]
     icut = [3, 3, 3]
     titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
-    fig, _, _ = phasorPy.phasor_plot(avg, g, s, icut, titles)
+    fig = Ph.phasor_plot(avg, g, s, icut, titles)
 
 plt.show()

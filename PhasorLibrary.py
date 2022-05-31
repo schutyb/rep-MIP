@@ -270,47 +270,49 @@ def rgb_coloring(dc, g, s, ic, center, Ro):
     return rgba
 
 
-def phasor_plot(dc, g, s, ic, num_phasors, title=None, same_phasor=False):
+def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
     """
         Plots nth phasors in the same figure.
     :param dc: image stack with all the average images related to each phasor nxn dimension.
     :param g: nxn dimension image.
     :param s: nxn dimension image.
-    :param ic: array lenth numbers of g images contains the cut intensity for related to each avg img.
-    :param num_phasors: number of phasors to be plotted.
+    :param ic: array length numbers of g images contains the cut intensity for related to each avg img.
     :param title: (optional) the title of each phasor
-    :param same_phasor: (optional) if you want to plot the same phasor with differents ic set True
+    :param same_phasor: (optional) if you want to plot the same phasor with different ic set True
     :return: the phasor figure and x and y arrays containing the G and S values.
     """
-    global fig, x, y
 
-    if title is None:
-        title = ['Phasor']
+    #  check that the files are correct
+    if not (len(dc) == len(g) and len(g) == len(s) and len(dc) == len(ic)):
+        raise ValueError("dc, g and s dimension do not match or ic dimension is not correct")
 
-    # create the figures with all the phasors in each axes or create only one phasor
-    if num_phasors > 1:
-        fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
-        fig.suptitle('Phasor')
-        for k in range(num_phasors):
-            x, y = (histogram_filtering(dc[k], g[k], s[k], ic[k]))
-            phasor_circle(ax[k])
-            ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
-            if len(title) > 1:
-                ax[k].set_title(title[k])
-            if same_phasor:
-                ax[k].set_xlabel('ic' + '=' + str(ic[k]))
-
-    elif num_phasors == 1:
-        x, y = histogram_filtering(dc, g, s, ic)
-        fig, ax = plt.subplots()
-        ax.hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
-        ax.set_title('Phasor')
-        phasor_circle(ax)
+    if not len(dc) != 0:
+        raise ValueError("Some input image stack is empty")
 
     else:
-        print("The average intensity lenth is zero or image is empty")
+        if title is None:
+            title = ['Phasor']
+        num_phasors = len(dc)
+        # create the figures with all the phasors in each axes or create only one phasor
+        if num_phasors > 1:
+            fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
+            fig.suptitle('Phasor')
+            for k in range(num_phasors):
+                x, y = (histogram_filtering(dc[k], g[k], s[k], ic[k]))
+                phasor_circle(ax[k])
+                ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+                if len(title) > 1:
+                    ax[k].set_title(title[k])
+                if same_phasor:
+                    ax[k].set_xlabel('ic' + '=' + str(ic[k]))
 
-    return fig
+        elif num_phasors == 1:
+            x, y = histogram_filtering(dc, g, s, ic)
+            fig, ax = plt.subplots()
+            ax.hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+            ax.set_title('Phasor')
+            phasor_circle(ax)
+        return fig
 
 
 def interactive(dc, g, s, Ro):

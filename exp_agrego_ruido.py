@@ -11,7 +11,7 @@ import PhasorLibrary as Ph
     the im is a numpy.ndarray with the image stack. 
 '''
 
-froute = str('/home/bruno/Documentos/TESIS/TESIS/estudio del ruido/exp bordes/lsm/')
+froute = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp bordes/lsm/')
 fname = str('exp_1x1_melanoma_1.lsm')
 f = froute + fname
 im = tifffile.imread(f)
@@ -49,7 +49,7 @@ aux4 = np.zeros([d, m, m])
 s = len(im[0])
 t = int(s / 2)
 
-times = 1
+times = 100
 pgc = np.zeros(times)
 pgf = np.zeros(times)
 psc = np.zeros(times)
@@ -89,8 +89,9 @@ while k < times:
 
     # concateno y promedio los gi y si
     g_aux = np.asarray([g1, g2, g3, g4])
-    g_fft = Ph.concat_d2(g_aux)
     s_aux = np.asarray([s1, s2, s3, s4])
+
+    g_fft = Ph.concat_d2(g_aux)
     s_fft = Ph.concat_d2(s_aux)
 
     '''
@@ -106,11 +107,22 @@ while k < times:
     esc = abs(s_concat - s_true)
     esf = abs(s_fft - s_true)
 
-    #  Potencia del error
-    pgc[k] = np.mean(egc ** 2)
-    pgf[k] = np.mean(egf ** 2)
-    psc[k] = np.mean(esc ** 2)
-    psf[k] = np.mean(esf ** 2)
+    #  potencia del error en las intersecciones
+    aux10 = np.zeros(egc.shape)
+    pot_gc = np.where(egc == egf, aux10, egc)
+    pgc[k] = np.sum(pot_gc ** 2) / len(np.where(pot_gc != 0)[0])
+
+    aux11 = np.zeros(egc.shape)
+    pot_gf = np.where(egc == egf, aux11, egf)
+    pgf[k] = np.sum(pot_gf ** 2) / len(np.where(pot_gf != 0)[0])
+
+    aux12 = np.zeros(egc.shape)
+    pot_sc = np.where(esc == esf, aux12, esc)
+    psc[k] = np.sum(pot_sc ** 2) / len(np.where(pot_sc != 0)[0])
+
+    aux13 = np.zeros(egc.shape)
+    pot_sf = np.where(esf == esc, aux13, esf)
+    psf[k] = np.sum(pot_sf ** 2) / len(np.where(pot_sf != 0)[0])
 
     k = k + 1
 
@@ -186,18 +198,24 @@ if plot_err:
     aux10 = np.zeros(egc.shape)
     pot_gc = np.where(egc == egf, aux10, egc)
     pot_gc = np.sum(pot_gc ** 2) / len(np.where(pot_gc != 0)[0])
+    gc_inter = np.where(egc == egf, aux11, g_concat)  # obtengo el g de la zona de solapamiento
+    g_gs_inter = np.where(egc == egf, aux11, g_true)  # gold standr en la zona de solapamiento
+    s_gs_inter = np.where(egc == egf, aux11, s_true)
 
     aux11 = np.zeros(egc.shape)
     pot_gf = np.where(egc == egf, aux11, egf)
     pot_gf = np.sum(pot_gf ** 2) / len(np.where(pot_gf != 0)[0])
+    gf_inter = np.where(egc == egf, aux11, g_fft)  # obtengo el g de la zona de solapamiento
 
     aux12 = np.zeros(egc.shape)
     pot_sc = np.where(esc == esf, aux12, esc)
     pot_sc = np.sum(pot_sc ** 2) / len(np.where(pot_sc != 0)[0])
+    sc_inter = np.where(egc == egf, aux11, s_concat)  # obtengo el s de la zona de solapamiento
 
     aux13 = np.zeros(egc.shape)
     pot_sf = np.where(esf == esc, aux13, esf)
     pot_sf = np.sum(pot_sf ** 2) / len(np.where(pot_sf != 0)[0])
+    sf_inter = np.where(egc == egf, aux11, s_fft)  # obtengo el s de la zona de solapamiento
 
     print('------------------------------------------------------------------------------------------')
     print('Potencia del error en las intersecciones para G concat', pot_gc)
@@ -213,8 +231,14 @@ if plot_phasor:
     avg = [dc, dc, dc]
     g = [g_true, g_concat, g_fft]
     s = [s_true, s_concat, s_fft]
-    icut = [3, 3, 3]
+    icut = [1, 1, 1]
     titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
-    fig = Ph.phasor_plot(avg, g, s, icut, titles)
+    fig1 = Ph.phasor_plot(avg, g, s, icut, titles)
 
-plt.show()
+    # grafico el phasor en las zonas de intersección
+    g2 = [g_gs_inter, gc_inter, gc_inter]
+    s2 = [s_gs_inter, sc_inter, sf_inter]
+    titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
+    fig2 = Ph.phasor_plot(avg, g2, s2, icut, titles)
+
+    plt.show()

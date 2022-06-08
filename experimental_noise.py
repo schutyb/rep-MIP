@@ -4,7 +4,10 @@ import tifffile
 import matplotlib.pyplot as plt
 import mpl_scatter_density
 
-#  voy a importar las 4 imagenes y luego calcular G y S de una sola, de dos promediddas y de 4 promediadas.
+#  Take 4, 2 averaging images, cut them and rebuilt a new 1024x1024 stack
+#  compute the G and S and the compare them with G and S computed with
+#  and 16 averaging image.
+
 f1 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(1).lsm')
 im1 = tifffile.imread(f1)
 f2 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(2).lsm')

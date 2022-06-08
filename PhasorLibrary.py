@@ -10,7 +10,6 @@ def phasor(image_stack, harmonic=1):
     """
         This function computes the average intensity image, the G and S coordinates of the phasor.
     As well as the modulation and phase.
-
     :param image_stack: is a file with spectral mxm images to calculate the fast fourier transform from
     numpy library.
     :param harmonic: int. The number of the harmonic where the phasor is calculated.
@@ -42,9 +41,8 @@ def phasor_tile(im_stack, dimx, dimy):
     """
         This funtion compute the fft and calculate the phasor for an stack contaning many tiles
         of microscopy images.
-
-    :param dimy: images horizontal dimension
-    :param dimx: images vertical dimension
+    :param dimx: images horizontal dimension
+    :param dimy: images vertical dimension
     :param im_stack: image stack containing the n lambda channels
     :return: avg: is the average intensity image
     :return: g: is mxm image with the real part of the fft.
@@ -84,7 +82,6 @@ def generate_file(filename, gsa):
 def concat_d2(im):
     """
         Concatenate a stack of images whose dimension is 2x2xn
-
     :param im: stack image with the images to be concatenated. It is a specific 2x2 concatenation.
     :return: im_concat it is an image stack with the concatenated images.
     """
@@ -176,7 +173,6 @@ def concat_d2(im):
 def ndmedian(im, filttime=0):
     """
         Performe an nd median filter
-
     :param im: ndarray usually an image to be filtered.
     :param filttime: numbers of time to be filtered im.
     :return: ndarray with the filtered image.
@@ -191,8 +187,7 @@ def ndmedian(im, filttime=0):
 
 def histogram_filtering(dc, g, s, ic):
     """
-        Use this function to filter the background deleting those pixels where the intensity value is under ic.
-
+        Use this function to filter the background deleting, those pixels where the intensity value is under ic.
     :param dc: ndarray. Intensity image.
     :param g:  ndarray. G image.
     :param s:  ndarray. S image.
@@ -212,7 +207,6 @@ def histogram_filtering(dc, g, s, ic):
 def phasor_circle(ax):
     """
         Built the figure inner and outer circle and the 45 degrees lines in the plot
-
     :param ax: axis where to plot the phasor circle.
     :return: the axis with the added circle.
     """
@@ -245,7 +239,6 @@ def rgb_coloring(dc, g, s, ic, center, Ro):
         Create a matrix to see if a pixels is into the circle, using circle equation
     so the negative values of Mi means that the pixel belong to the circle and multiply
     aux1 to set zero where the avg image is under ic value
-
     :param dc: ndarray. Intensity image.
     :param g:  ndarray. G image.
     :param s:  ndarray. S image.
@@ -280,46 +273,46 @@ def rgb_coloring(dc, g, s, ic, center, Ro):
 def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
     """
         Plots nth phasors in the same figure.
-
     :param dc: image stack with all the average images related to each phasor nxn dimension.
     :param g: nxn dimension image.
     :param s: nxn dimension image.
-    :param ic: array lenth numbers of g images contains the cut intensity for related to each avg img.
+    :param ic: array length numbers of g images contains the cut intensity for related to each avg img.
     :param title: (optional) the title of each phasor
-    :param same_phasor: (optional) if you want to plot the same phasor with differents ic set True
+    :param same_phasor: (optional) if you want to plot the same phasor with different ic set True
     :return: the phasor figure and x and y arrays containing the G and S values.
     """
-    global fig, x, y
 
-    if title is None:
-        title = ['Phasor']
+    #  check that the files are correct
+    if not (len(dc) == len(g) and len(g) == len(s) and len(dc) == len(ic)):
+        raise ValueError("dc, g and s dimension do not match or ic dimension is not correct")
 
-    num_phasors = len(dc)
-
-    # create the figures with all the phasors in each axes or create only one phasor
-    if num_phasors > 1:
-        fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
-        fig.suptitle('Phasor')
-        for k in range(num_phasors):
-            x, y = (histogram_filtering(dc[k], g[k], s[k], ic[k]))
-            phasor_circle(ax[k])
-            ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
-            if len(title) > 1:
-                ax[k].set_title(title[k])
-            if same_phasor:
-                ax[k].set_xlabel('ic' + '=' + str(ic[k]))
-
-    elif num_phasors == 1:
-        x, y = histogram_filtering(dc[0], g[0], s[0], ic[0])
-        fig, ax = plt.subplots()
-        ax.hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
-        ax.set_title('Phasor')
-        phasor_circle(ax)
+    if not len(dc) != 0:
+        raise ValueError("Some input image stack is empty")
 
     else:
-        print("The average intensity lenth is zero or image is empty")
+        if title is None:
+            title = ['Phasor']
+        num_phasors = len(dc)
+        # create the figures with all the phasors in each axes or create only one phasor
+        if num_phasors > 1:
+            fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
+            fig.suptitle('Phasor')
+            for k in range(num_phasors):
+                x, y = (histogram_filtering(dc[k], g[k], s[k], ic[k]))
+                phasor_circle(ax[k])
+                ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+                if len(title) > 1:
+                    ax[k].set_title(title[k])
+                if same_phasor:
+                    ax[k].set_xlabel('ic' + '=' + str(ic[k]))
 
-    return fig
+        elif num_phasors == 1:
+            x, y = histogram_filtering(dc, g, s, ic)
+            fig, ax = plt.subplots()
+            ax.hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+            ax.set_title('Phasor')
+            phasor_circle(ax)
+        return fig
 
 
 def interactive(dc, g, s, Ro):
@@ -327,7 +320,6 @@ def interactive(dc, g, s, Ro):
         This function plot the avg image, its histogram, the phasors and the rbg pseudocolor image.
     To get the phasor the user must pick an intensity cut umbral in the histogram in order to plot the phasor.
     To get the rgb pseudocolor image you must pick three circle in the phasor plot.
-
     :param dc: average intensity image. ndarray
     :param g: image. ndarray. Contains the real coordinate G of the phasor
     :param s: image. ndarray. Contains the imaginary coordinate S of the phasor
@@ -365,7 +357,6 @@ def interactive(dc, g, s, Ro):
 def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
     """
         This function plot the histogram between two components in the phasor.
-
     :param Ro: int. radius of the circle to select pixels in the phasor
     :param g: image. ndarray. Contains the real coordinate G of the phasor
     :param s: image. ndarray. Contains the imaginary coordinate S of the phasor

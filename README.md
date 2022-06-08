@@ -1,37 +1,20 @@
-# MIP
-codigos de la tesis
+# Melanoma identification through phasor analysis 
 
-PhasorLibrary.py
-
-def phasor(image_stack):
-   """
-   :param image_stack: is a file with spectral mxm images to calculate the fast fourier transform from
-   numpy library.
-   :return: g: is mxm image with the real part of the fft.
-   :return: s: is mxm imaginary with the real part of the fft.
-   :return: md: numpy.ndarray  It is the modulus obtain with Euclidean Distance.
-   :return: ph: is the phase between g ans s in degrees.
-   """
+### This scripts were made to compute phasor analysis with HSI of skin tissue.
+This repository contains all the algorithms and scripts to compute the phasor analysis 
+in hyperspectral imaging of skin tissue. In this project it was developed many tools 
+to process the image stack acquired by a Zeiss 880 confocal microscopy. It includes a 
+concatenating algorithms to solve tile images stitching and alignment. Histogram 
+thresholding, image filtering. 
 
 
+#### PhasorLibrary.py
+Main library that contains the functions developed to do the image processing and 
+analysis for this project. 
 
-def generate_file(filename, gsa):
-   """
-   :param filename: Type string characters. The name of the file to be written, with the extension ome.tiff
-   :param gsa: Type n-dimensional array holding the data to be stored. It usually has the mxm images of
-   g,s and the average image.
-   :return file: The created file storing the data. If the filename extension was ome.tiff the file is an
-   ome.tiff format.
-   """
+#### noise_simulation.py
+This script simulate and study the noise at the image. Given a hyperspectral image
+it is simulated the process of stitching 5% of the border where there is overlap in
+the image of each tile to obtain the complete microscopy image. This process is done 
+in two ways, concatenating the tile first and the computing the phasor, and vice versa.  
 
-def concat_d2(im):
-   """
-   :param im: stack image with the images to be concatenated. It is a specific o 2x2 concatenation.
-   :return: im_concat it is an image stack with the concatenated images.
-   """
-
-def ndmedian(im, filttime=0):
-   """
-   :param im: ndarray usually an image to be filtered.
-   :param filttime: numbers of time to be filtered im.
-   :return: ndarray with the filtered image.  """

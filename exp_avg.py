@@ -6,11 +6,12 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 '''
-En este codigo utilizo imagenes con diferentes promedios para comparar
-calculo los g y s con 16 promedios y los tomo como gold standr y luego calculo con los demas promedios 
+    En este codigo utilizo imagenes con diferentes promedios para comparar
+    calculo los g y s con 16 promedios y los tomo como gold standard y luego 
+    calculo con los demas promedios 
 '''
 
-#  The 16 averages is the gold standar
+#  The 16 average image is the gold standard
 file = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_avg/test_16_mean.lsm')
 im = tifffile.imread(file)
 dc, g, s, md, ph = Ph.phasor(im, harmonic=1)

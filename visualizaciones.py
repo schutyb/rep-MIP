@@ -1,4 +1,3 @@
-import tifffile
 import PhasorLibrary as Ph
 import numpy as np
 import PhasorPy

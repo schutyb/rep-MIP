@@ -2,30 +2,27 @@ import numpy as np
 import PhasorLibrary
 import tifffile
 import matplotlib.pyplot as plt
-import mpl_scatter_density
+# import mpl_scatter_density
 
-#  Take 4, 2 averaging images, cut them and rebuilt a new 1024x1024 stack
-#  compute the G and S and the compare them with G and S computed with
-#  and 16 averaging image.
-
-f1 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(1).lsm')
+#  voy a importar las 4 imagenes y luego calcular G y S de una sola, de dos promedidas y de 4 promediadas.
+f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp avg/2_avg/test_2mean_1.lsm')
 im1 = tifffile.imread(f1)
-f2 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(2).lsm')
+f2 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp avg/2_avg/test_2mean_2.lsm')
 im2 = tifffile.imread(f2)
-f3 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(3).lsm')
+f3 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp avg/2_avg/test_2mean_3.lsm')
 im3 = tifffile.imread(f3)
-f4 = str('/home/bruno/Documentos/TESIS/experimento_bordes/test_2mean(4).lsm')
+f4 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp avg/2_avg/test_2mean_4.lsm')
 im4 = tifffile.imread(f4)
 
-g1, s1 = PhasorLibrary.phasor(im1)  # adquiero el g y s de caso 1
-g2, s2 = PhasorLibrary.phasor(im2)
-g3, s3 = PhasorLibrary.phasor(im3)
-g4, s4 = PhasorLibrary.phasor(im4)
+_, g1, s1, _, _ = PhasorLibrary.phasor(im1)  # adquiero el g y s de caso 1
+_, g2, s2, _, _ = PhasorLibrary.phasor(im2)
+_, g3, s3, _, _ = PhasorLibrary.phasor(im3)
+_, g4, s4, _, _ = PhasorLibrary.phasor(im4)
 
 g_avg = (g1 + g2 + g3 + g4) / 4
 s_avg = (s1 + s2 + s3 + s4) / 4
 im = (im1 + im2 + im3 + im4) / 4
-g, s = PhasorLibrary.phasor(im)
+_, g, s, _, _ = PhasorLibrary.phasor(im)
 
 plotty = True
 if plotty:

@@ -21,8 +21,8 @@ im = tifffile.imread(f)
     Also we calculate the modulation and phase, md and ph respectably, the average image of the stack
     and the histogram of the average image. 
 '''
-harm = 1
-dc, g_true, s_true, md, ph = Ph.phasor(im, harmonic=harm)
+
+dc, g_true, s_true, md, ph = Ph.phasor(im, harmonic=1)
 bins = np.arange(0, 255, 1)
 hist, _ = np.histogram(dc, bins)
 
@@ -76,16 +76,16 @@ while k < times:
     img_concat = Ph.concat_d2(im_aux)
 
     # Adquiero el g y el s de la imagen concatenada antes
-    _, g_concat, s_concat, _, _ = Ph.phasor(img_concat, harmonic=harm)
+    _, g_concat, s_concat, _, _ = Ph.phasor(img_concat)
 
     '''
         En esta parte calculo el g y s por patches. Calculo el gi y si de cada uno de los 4 cuadrantes, promediando 
         las zonas de solapamiento para obtener un solo g y s. 
     '''
-    _, g1, s1, _, _ = Ph.phasor(im1, harmonic=harm)
-    _, g2, s2, _, _ = Ph.phasor(im2, harmonic=harm)
-    _, g3, s3, _, _ = Ph.phasor(im3, harmonic=harm)
-    _, g4, s4, _, _ = Ph.phasor(im4, harmonic=harm)
+    _, g1, s1, _, _ = Ph.phasor(im1)
+    _, g2, s2, _, _ = Ph.phasor(im2)
+    _, g3, s3, _, _ = Ph.phasor(im3)
+    _, g4, s4, _, _ = Ph.phasor(im4)
 
     # concateno y promedio los gi y si
     g_aux = np.asarray([g1, g2, g3, g4])

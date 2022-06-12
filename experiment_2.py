@@ -6,15 +6,14 @@ from mpl_toolkits.axes_grid1 import make_axes_locatable
 
 
 '''
-    En este codigo utilizo imagenes con diferentes promedios para comparar
-    calculo los g y s con 16 promedios y los tomo como gold standard y luego 
-    calculo con los demas promedios 
+En este codigo utilizo imagenes con diferentes promedios para comparar
+calculo los g y s con 16 promedios y los tomo como gold standar y luego calculo con los demas promedios 
 '''
 
-#  The 16 average image is the gold standard
-file = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_avg/test_16_mean.lsm')
+#  The 16 averages is the gold standar
+file = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp avg/test_16_mean.lsm')
 im = tifffile.imread(file)
-dc, g, s, md, ph = Ph.phasor(im, harmonic=1)
+dc, g, s, _, _ = Ph.phasor(im, harmonic=1)
 
 l = int(im.shape[1] * 0.05)
 m = int(im.shape[1] / 2 + l)
@@ -22,21 +21,21 @@ n = int(im.shape[1] / 2 - l)
 d = len(im)
 
 for i in range(4):
-    file = str('/home/bruno/Documentos/TESIS/TESIS/Experimentos/exp_avg/2_avg/test_2mean_') + str(i + 1) + \
-           str('.lsm')
+    file = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/estudio del ruido/exp avg/2_avg/test_2mean_') + str(i + 1) \
+           + str('.lsm')
     aux = tifffile.imread(file)
     if i == 0:
         aux1 = aux[0:30, 0:m, 0:m]
-        dc1, g1, s1, md, ph = Ph.phasor(aux1, harmonic=1)
+        dc1, g1, s1, _, _ = Ph.phasor(aux1, harmonic=1)
     elif i == 1:
         aux2 = aux[0:30, 0:m, n:1024]
-        dc2, g2, s2, md, ph = Ph.phasor(aux2, harmonic=1)
+        dc2, g2, s2, _, _ = Ph.phasor(aux2, harmonic=1)
     elif i == 2:
         aux3 = aux[0:30, n:1024, 0:m]
-        dc3, g3, s3, md, ph = Ph.phasor(aux3, harmonic=1)
+        dc3, g3, s3, _, _ = Ph.phasor(aux3, harmonic=1)
     elif i == 3:
         aux4 = aux[0:30, n:1024, n:1024]
-        dc4, g4, s4, md, ph = Ph.phasor(aux4, harmonic=1)
+        dc4, g4, s4, _, _ = Ph.phasor(aux4, harmonic=1)
 
 aux_s = np.asarray([s1, s2, s3, s4])
 sn = Ph.concat_d2(aux_s)
@@ -78,9 +77,9 @@ if err:
         cax = divider.append_axes('right', size='5%', pad=0.05)
         fig.colorbar(im3, cax=cax, orientation='vertical')
 
-        ax1.set_title("dc")
-        ax2.set_title("g")
-        ax3.set_title("s")
+        ax1.set_title("g")
+        ax2.set_title("s")
+        ax3.set_title("dc")
 
         pg = np.mean(eg ** 2)
         ps = np.mean(es ** 2)
@@ -95,7 +94,7 @@ if plot_phasor:
     avg = [dc, dcn]
     gl = [g, gn]
     sl = [s, sn]
-    icut = [5, 5]
+    icut = [1, 1]
     titles = ['Gold standar', 'Experimental']
     fig = Ph.phasor_plot(avg, gl, sl, icut, titles)
 

@@ -19,15 +19,16 @@ dc = np.asarray([i1, i2, i1, i2, i2, i1, i2, i1, i1, i2, i1, i2, i2, i1, i2, i1]
 '''
 
 # f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/caso_18370/lsm/18370_SP_Tile_2x2_b.lsm')
-# f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/16952_SP_Tile_4x3.lsm')
-f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/20412_SP_Tile_11x6.lsm')
+f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/base de datos lsm/2022/MELANOMAS/16952_SP_Tile_4x3.lsm')
+# f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/20412_SP_Tile_11x6.lsm')
 # f1 = str('/home/bruno/Documentos/TESIS/TESIS/3x3_2avg.lsm')
+# f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/pruebas algoritmos/concatenar/tiles_puebas/Image 4.lsm')
 im = tifffile.imread(f1)
 
 # Phasor tile
 dc, g, s, md, ph = phlib.phasor_tile(im, 1024, 1024)
-dc1 = phlib.concatenate(dc, 6, 11)
+dc1 = phlib.concatenate(g, 3, 4)
 
 plt.figure(1)
-plt.imshow(dc1, cmap='nipy_spectral')
+plt.imshow(dc1, cmap='gray')
 plt.show()

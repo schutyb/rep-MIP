@@ -41,8 +41,8 @@ def phasor_tile(im_stack, dimx, dimy):
     """
         This funtion compute the fft and calculate the phasor for an stack contaning many tiles
         of microscopy images.
-    :param dimx: images horizontal dimension
-    :param dimy: images vertical dimension
+    :param dimy: images horizontal dimension
+    :param dimx: images vertical dimension
     :param im_stack: image stack containing the n lambda channels
     :return: avg: is the average intensity image
     :return: g: is mxm image with the real part of the fft.

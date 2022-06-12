@@ -4,11 +4,11 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import hsv_to_rgb
 from skimage.filters import median, gaussian
 
-#f1 = str('/home/bruno/Documentos/TESIS/caso_prueba/calculados/prueba2_nevo.ome.tif')
-#gsa = tifffile.imread(f1)
-#img_avg = gsa[2]
-#ph = gsa[3]
-#md = gsa[4]
+# f1 = str('/home/bruno/Documentos/TESIS/caso_prueba/calculados/prueba2_nevo.ome.tif')
+# gsa = tifffile.imread(f1)
+# img_avg = gsa[2]
+# ph = gsa[3]
+# md = gsa[4]
 
 # observacion hay 0 y 360 que aparecen de hacer calculos, que hay que corregir
 
@@ -80,6 +80,6 @@ if probar:
     fig, axs = plt.subplots(1, 2)
     axs[0].imshow(a)
     axs[0].set_title('img_colored')
-    #axs[1].imshow(img_avg, cmap='gray')
+    # axs[1].imshow(img_avg, cmap='gray')
     axs[1].set_title('Img Avg')
     plt.show()

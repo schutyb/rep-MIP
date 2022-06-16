@@ -4,11 +4,13 @@ from skimage.feature import ORB, match_descriptors, plot_matches
 from skimage.transform import ProjectiveTransform, SimilarityTransform, warp
 from skimage.measure import ransac
 import numpy as np
+import PhasorLibrary as ph
 
-file = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/pruebas algoritmos/alineacion/alignment_1.lsm')
+
+file = str('/home/bruno/Documentos/TESIS/TESIS/pruebas algoritmos/alineacion/alignment_1.lsm')
 im = tifffile.imread(file)
 
-im1 = im[0][:, 973:1024]
+im1 = im[0][:, 968:1019]
 im2 = im[1][:, 0:51]
 
 # ########  Feature detection and matching #####################################################
@@ -73,18 +75,14 @@ im1_warped = warp(im1, transform01, order=3, output_shape=output_shape, cval=-1)
 im1_mask = (im1_warped != -1)  # Mask == 1 inside image
 im1_warped[~im1_mask] = 0  # Return background values to 0
 
-# ALINEAMIENTO BRUTO
+# ALINEAMIENTO BRUTO  ###################################################################33
 merged = (im1_warped + im2_warped)
 overlap = (im1_mask * 1 + im2_mask)
 normalized = merged / np.maximum(overlap, 1)
 
-fig, ax = plt.subplots(figsize=(12, 12))
-
-ax.imshow(normalized, cmap='gray')
-
-plt.tight_layout()
-ax.axis('off')
-plt.show()
+'''plt.figure(2)
+plt.imshow(normalized, cmap='gray', interpolation='none')'''
+# ########################################################################################
 
 rmax = output_shape[0] - 1
 cmax = output_shape[1] - 1
@@ -175,33 +173,32 @@ costs01[-1, :] = 0
 
 from skimage.graph import route_through_array
 
-# Arguments are:
-#   cost array
-#   start pt
-#   end pt
-#   can it traverse diagonally
 pts, _ = route_through_array(costs01, mask_pts01[0], mask_pts01[1], fully_connected=True)
-
 # Convert list of lists to 2d coordinate array for easier indexing
 pts = np.array(pts)
 
-mask0 = np.zeros_like(im1_warped, dtype=np.uint8)
-mask0[pts[:, 0], pts[:, 1]] = 1
+'''plt.figure(3)
+plt.imshow(im1_warped - im2_warped, cmap='gray')  # Plot the difference image
+plt.plot(pts[:, 1], pts[:, 0])  # Overlay the minimum-cost path
+plt.title('Minimum cost path')
+plt.tight_layout()
+plt.show()'''
+
+mask1 = np.zeros_like(im1_warped, dtype=np.uint8)
+mask1[pts[:, 0], pts[:, 1]] = 1
 
 # con el codigo de abajo veo el camino y la imagen de la zona que agrego
-'''fig, ax = plt.subplots(figsize=(11, 11))
-# View the path in black and white
-ax.imshow(mask0, cmap='gray')
-ax.axis('off')
+'''plt.figure(4)
+plt.imshow(mask0, cmap='gray')
 plt.show()'''
 
 
 from skimage.morphology import flood_fill
-# Labeling starts with one at point (0, 0)
-mask0 = flood_fill(mask0, (0, 0), 1, connectivity=1)
-# The result
-plt.imshow(mask0, cmap='gray')
-plt.show()
+mask1 = flood_fill(mask1, (0, 0), 1, connectivity=1)
+
+'''plt.figure(5)
+plt.imshow(mask1, cmap='gray')
+plt.show()'''
 
 
 def add_alpha(img, mask=None):
@@ -226,9 +223,23 @@ def add_alpha(img, mask=None):
     return np.dstack((img, mask))
 
 
-pano0_final = add_alpha(im1_warped, mask0)
+mask2 = ~(mask1.astype(np.bool))
+im1_final = add_alpha(im1_warped, mask1)
+im2_final = add_alpha(im2_warped, mask2)
 
-plt.figure(5)
-plt.imshow(pano0_final, interpolation='none')
+# grafico todx para comparar
+
+fig, ax = plt.subplots(1, 5, figsize=(20, 12))
+ax[0].imshow(im1, cmap='gray')
+ax[1].imshow(im2, cmap='gray')
+ax[1].set_title('Imágenes originales')
+
+ax[2].imshow(normalized, cmap='gray', interpolation='none')
+ax[2].set_title('Primer método')
+
+ax[3].imshow(im1_final, interpolation='none')
+ax[3].imshow(im2_final, interpolation='none')
+ax[3].set_title('Segundo método (Optimal path')
+
+ax[4].imshow((im1+im2)/2, cmap='gray')
 plt.show()
-

@@ -37,10 +37,11 @@ def phasor(image_stack, harmonic=1):
     return avg, g, s, md, ph
 
 
-def phasor_tile(im_stack, dimx, dimy):
+def phasor_tile(im_stack, dimx, dimy, harmonic=1):
     """
         This funtion compute the fft and calculate the phasor for an stack contaning many tiles
         of microscopy images.
+    :param harmonic: int. The number of the harmonic where the phasor is calculated.
     :param dimy: images horizontal dimension
     :param dimx: images vertical dimension
     :param im_stack: image stack containing the n lambda channels
@@ -58,7 +59,7 @@ def phasor_tile(im_stack, dimx, dimy):
     ph = np.zeros([len(im_stack), dimx, dimy])
 
     for i in range(len(im_stack)):
-        dc[i], g[i], s[i], md[i], ph[i] = phasor(im_stack[i], harmonic=1)
+        dc[i], g[i], s[i], md[i], ph[i] = phasor(im_stack[i], harmonic)
 
     return dc, g, s, md, ph
 

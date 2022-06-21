@@ -31,17 +31,16 @@ def phasor(image_stack, harmonic=1):
     s /= -dc
 
     md = np.sqrt(g ** 2 + s ** 2)
-    ph = np.angle(data[harmonic], deg=True)
+    ph = np.angle(data[harmonic], deg=True) + 180
     avg = np.mean(image_stack, axis=0)
 
     return avg, g, s, md, ph
 
 
-def phasor_tile(im_stack, dimx, dimy, harmonic=1):
+def phasor_tile(im_stack, dimx, dimy):
     """
-        This funtion compute the fft and calculate the phasor for an stack contaning many tiles
+        This function compute the fft and calculate the phasor for an stack containing many tiles
         of microscopy images.
-    :param harmonic: int. The number of the harmonic where the phasor is calculated.
     :param dimy: images horizontal dimension
     :param dimx: images vertical dimension
     :param im_stack: image stack containing the n lambda channels
@@ -59,7 +58,7 @@ def phasor_tile(im_stack, dimx, dimy, harmonic=1):
     ph = np.zeros([len(im_stack), dimx, dimy])
 
     for i in range(len(im_stack)):
-        dc[i], g[i], s[i], md[i], ph[i] = phasor(im_stack[i], harmonic)
+        dc[i], g[i], s[i], md[i], ph[i] = phasor(im_stack[i], harmonic=1)
 
     return dc, g, s, md, ph
 
@@ -186,7 +185,7 @@ def ndmedian(im, filttime=0):
     return imfilt
 
 
-def histogram_filtering(dc, g, s, ic):
+def histogram_thresholding(dc, g, s, ic):
     """
         Use this function to filter the background deleting, those pixels where the intensity value is under ic.
     :param dc: ndarray. Intensity image.
@@ -299,7 +298,7 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
             fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
             fig.suptitle('Phasor')
             for k in range(num_phasors):
-                x, y = (histogram_filtering(dc[k], g[k], s[k], ic[k]))
+                x, y = (histogram_thresholding(dc[k], g[k], s[k], ic[k]))
                 phasor_circle(ax[k])
                 ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
                 if len(title) > 1:
@@ -308,7 +307,7 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
                     ax[k].set_xlabel('ic' + '=' + str(ic[k]))
 
         elif num_phasors == 1:
-            x, y = histogram_filtering(dc, g, s, ic)
+            x, y = histogram_thresholding(dc, g, s, ic)
             fig, ax = plt.subplots()
             ax.hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
             ax.set_title('Phasor')
@@ -340,7 +339,7 @@ def interactive(dc, g, s, Ro):
     ic = plt.ginput(1, timeout=0)
     ic = int(ic[0][0])
 
-    x, y = histogram_filtering(dc, g, s, ic)  # x y contain g and s coordinate to pass to hist2d function
+    x, y = histogram_thresholding(dc, g, s, ic)  # x y contain g and s coordinate to pass to hist2d function
 
     phasor_circle(ax[1, 0])
     ax[1, 0].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
@@ -367,7 +366,7 @@ def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
     :param print_fractions: (optional) set true if you want to print the % component of each pixel on terminal.
     :return: fig. Figure with phasor and the pixel histogram.
     """
-    x_c, y_c = histogram_filtering(dc, g, s, ic)
+    x_c, y_c = histogram_thresholding(dc, g, s, ic)
     fig, ax = plt.subplots(1, 2)
     ax[0].hist2d(x_c, y_c, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
     ax[0].set_title('Phasor - components determination')
@@ -496,3 +495,9 @@ def concatenate(im, m, n, hper=0.07, vper=0.05):
         k = k + 1
 
     return img
+
+
+def psnr(img_optimal, img):
+    MSE = np.mean(abs(img_optimal - img) ** 2)
+    psnr_aux = 10 * np.log10((255 ** 2) / MSE)
+    return psnr_aux

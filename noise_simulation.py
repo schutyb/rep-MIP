@@ -27,7 +27,7 @@ bins = np.arange(0, 255, 1)
 hist, _ = np.histogram(dc, bins)
 
 '''
-    defino cuatro imagenes a partir de una  con un 5 % de solapamiento
+    defino cuatro imagenes a partir de una con un 5 % de solapamiento
     agrego ruido y luego con esa voy a calcular el phasor y filtrarla
     para ver como difieren teniendo la imagen original y puedo contrastar
 '''
@@ -49,11 +49,15 @@ aux4 = np.zeros([d, m, m])
 s = len(im[0])
 t = int(s / 2)
 
-times = 1
+times = 3
 pgc = np.zeros(times)
 pgf = np.zeros(times)
 psc = np.zeros(times)
 psf = np.zeros(times)
+psnr_gc = np.zeros(times)
+psnr_gf = np.zeros(times)
+psnr_sc = np.zeros(times)
+psnr_sf = np.zeros(times)
 
 k = 0
 while k < times:
@@ -107,43 +111,53 @@ while k < times:
     esc = abs(s_concat - s_true)
     esf = abs(s_fft - s_true)
 
-    #  potencia del error en las intersecciones
+    #  PSNR en las intersecciones
     aux10 = np.zeros(egc.shape)
     pot_gc = np.where(egc == egf, aux10, egc)
     pgc[k] = np.sum(pot_gc ** 2) / len(np.where(pot_gc != 0)[0])
+    psnr_gc[k] = 10 * np.log10((255 ** 2) / pgc[k])
 
     aux11 = np.zeros(egc.shape)
     pot_gf = np.where(egc == egf, aux11, egf)
     pgf[k] = np.sum(pot_gf ** 2) / len(np.where(pot_gf != 0)[0])
+    psnr_gf[k] = 10 * np.log10((255 ** 2) / pgf[k])
 
     aux12 = np.zeros(egc.shape)
     pot_sc = np.where(esc == esf, aux12, esc)
     psc[k] = np.sum(pot_sc ** 2) / len(np.where(pot_sc != 0)[0])
+    psnr_sc[k] = 10 * np.log10((255 ** 2) / psc[k])
 
     aux13 = np.zeros(egc.shape)
     pot_sf = np.where(esf == esc, aux13, esf)
     psf[k] = np.sum(pot_sf ** 2) / len(np.where(pot_sf != 0)[0])
+    psnr_sf[k] = 10 * np.log10((255 ** 2) / psf[k])
 
     k = k + 1
 
 plt.figure(1)
-plt.plot(pgc, 'r*-', label='Concatenacion')
-plt.plot(pgf, 'b*-', label='fft')
-plt.title('Potencia en G')
-plt.legend()
+plt.plot(np.arange(times), psnr_gc, 'r*-', label='Concatenating')
+plt.plot(np.arange(times), psnr_gf, 'b*-', label='fft')
+plt.title('PSNR en G')
+plt.grid()
+plt.ylabel('dB')
+plt.legend(loc=1)
 
 plt.figure(2)
-plt.plot(psc, 'r*-', label='Concatenacion')
-plt.plot(psf, 'b*-', label='fft')
-plt.title('Potencia en S')
+plt.plot(psnr_sc, 'r*-', label='Concatenating')
+plt.plot(psnr_sf, 'b*-', label='fft')
+plt.title('PSNR en S')
+plt.grid()
+plt.ylabel('dB')
+plt.legend(loc=1)
 plt.legend()
+
 plt.show()
 
-pgc = np.mean(pgc)
-pgf = np.mean(pgf)
+psnr_gc = np.mean(psnr_gc)
+psnr_gf = np.mean(psnr_gf)
 
-psc = np.mean(psc)
-psf = np.mean(psf)
+psnr_sc = np.mean(psnr_sc)
+psnr_sf = np.mean(psnr_sf)
 
 # voy a graficar para visualizar el error en las intersecciones
 plot_err = True
@@ -189,42 +203,43 @@ if plot_err:
     plt.title('Diferencia del error entre ambos metodos')
     im = plt.imshow(e, cmap='gray')
 
-    print('Potencia del error en G mediante concatenacion', pgc)
-    print('Potencia del error en G mediante fft', pgf)
-    print('Potencia del error en S mediante concatenacion', psc)
-    print('Potencia del error en S mediante fft', psf)
+    '''
+        print('PSNR en G mediante concatenacion', psnr_gc)
+        print('PSNR en G mediante fft', psnr_gf)
+        print('PSNR en S mediante concatenacion', psnr_sc)
+        print('PSNR en S mediante fft', psnr_sf)
+    '''
 
     #  potencia del error en las intersecciones
     aux10 = np.zeros(egc.shape)
     pot_gc = np.where(egc == egf, aux10, egc)
     pot_gc = np.sum(pot_gc ** 2) / len(np.where(pot_gc != 0)[0])
+    psnr_gc_int = 10 * np.log10((255 ** 2) / pot_gc)        # PSNR
     gc_inter = np.where(egc == egf, aux11, g_concat)  # obtengo el g de la zona de solapamiento
     g_gs_inter = np.where(egc == egf, aux11, g_true)  # gold standr en la zona de solapamiento
     s_gs_inter = np.where(egc == egf, aux11, s_true)
-
     aux11 = np.zeros(egc.shape)
     pot_gf = np.where(egc == egf, aux11, egf)
     pot_gf = np.sum(pot_gf ** 2) / len(np.where(pot_gf != 0)[0])
+    psnr_gf_int = 10 * np.log10((255 ** 2) / pot_gf)        # PSNR
     gf_inter = np.where(egc == egf, aux11, g_fft)  # obtengo el g de la zona de solapamiento
-
     aux12 = np.zeros(egc.shape)
     pot_sc = np.where(esc == esf, aux12, esc)
     pot_sc = np.sum(pot_sc ** 2) / len(np.where(pot_sc != 0)[0])
+    psnr_sc_int = 10 * np.log10((255 ** 2) / pot_sc)  # PSNR
     sc_inter = np.where(egc == egf, aux11, s_concat)  # obtengo el s de la zona de solapamiento
-
     aux13 = np.zeros(egc.shape)
     pot_sf = np.where(esf == esc, aux13, esf)
     pot_sf = np.sum(pot_sf ** 2) / len(np.where(pot_sf != 0)[0])
+    psnr_sf_int = 10 * np.log10((255 ** 2) / pot_sf)  # PSNR
     sf_inter = np.where(egc == egf, aux11, s_fft)  # obtengo el s de la zona de solapamiento
 
     print('------------------------------------------------------------------------------------------')
-    print('Potencia del error en las intersecciones para G concat', pot_gc)
-    print('Potencia del error en las intersecciones para G fft', pot_gf)
-    print('Potencia del error en las intersecciones para S concat', pot_sc)
-    print('Potencia del error en las intersecciones para S fft', pot_sf)
+    print('PSNR en las intersecciones para G concat', psnr_gc_int)
+    print('PSNR en las intersecciones para G fft', psnr_gf_int)
+    print('PSNR en las intersecciones para S concat', psnr_sc_int)
+    print('PSNR en las intersecciones para S fft', psnr_sf_int)
     print('------------------------------------------------------------------------------------------')
-    print('Diferencia de potencias entre gc y gf', abs(pot_gc - pot_gf))
-    print('Diferencia de potencias entre sc y sf', abs(pot_sc - pot_sf))
 
 plot_phasor = True  # grafico el phasor de cada caso
 if plot_phasor:

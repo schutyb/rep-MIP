@@ -270,9 +270,10 @@ def rgb_coloring(dc, g, s, ic, center, Ro):
     return rgba
 
 
-def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
+def phasor_plot(dc, g, s, ic, title=None, xlabel=None, same_phasor=False):
     """
         Plots nth phasors in the same figure.
+    :param xlabel: x label for each phasor plot
     :param dc: image stack with all the average images related to each phasor nxn dimension.
     :param g: nxn dimension image.
     :param s: nxn dimension image.
@@ -295,7 +296,7 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
         num_phasors = len(dc)
         # create the figures with all the phasors in each axes or create only one phasor
         if num_phasors > 1:
-            fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
+            fig, ax = plt.subplots(1, num_phasors, figsize=(18, 5))
             fig.suptitle('Phasor')
             for k in range(num_phasors):
                 x, y = (histogram_thresholding(dc[k], g[k], s[k], ic[k]))
@@ -303,6 +304,8 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
                 ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
                 if len(title) > 1:
                     ax[k].set_title(title[k])
+                    if xlabel:
+                        ax[k].set_xlabel(xlabel[k])
                 if same_phasor:
                     ax[k].set_xlabel('ic' + '=' + str(ic[k]))
 
@@ -446,12 +449,11 @@ def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
 def concatenate(im, m, n, hper=0.07, vper=0.05):
     """
         This function concatenate a stack image from mxn images create an m x n only image.
-    :param vper:
-    :param hper:
-    :param im: image stack to be concatenate, containing mxn images. The dimension is 1 x (nxm).
+    :param im: image stack to be concatenated, containing mxn images. The dimension is 1 x (nxm).
     :param m: number of vertical images
     :param n: number of horizontal images
-    :param per: percentage of overlap
+    :param hper: horizontal percentage of overlap
+    :param vper: vertical percentage of overlap
     :return: concatenated image
     """
     d = im.shape[1]
@@ -498,6 +500,6 @@ def concatenate(im, m, n, hper=0.07, vper=0.05):
 
 
 def psnr(img_optimal, img):
-    MSE = np.mean(abs(img_optimal - img) ** 2)
-    psnr_aux = 10 * np.log10((255 ** 2) / MSE)
-    return psnr_aux
+    mse = np.mean(abs(img_optimal - img) ** 2)
+    val_psnr = 10 * np.log10((255 ** 2) / mse)
+    return val_psnr

@@ -11,8 +11,10 @@ import PhasorLibrary as Ph
     the im is a numpy.ndarray with the image stack. 
 '''
 
-froute = str('/home/bruno/Documentos/TESIS/TESIS/estudio del ruido/exp bordes/lsm/')
-fname = str('exp_1x1_melanoma_1.lsm')
+# SET THE CORRECT ROUTE TO YOUR FILE IN frout AND USE THE FILE NAMED: noise_simulation.lsm in fname
+
+froute = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/noise simulation/')
+fname = str('noise_simulation.lsm')
 f = froute + fname
 im = tifffile.imread(f)
 
@@ -49,7 +51,7 @@ aux4 = np.zeros([d, m, m])
 s = len(im[0])
 t = int(s / 2)
 
-times = 3
+times = 10
 pgc = np.zeros(times)
 pgf = np.zeros(times)
 psc = np.zeros(times)
@@ -80,23 +82,24 @@ while k < times:
     img_concat = Ph.concat_d2(im_aux)
 
     # Adquiero el g y el s de la imagen concatenada antes
-    _, g_concat, s_concat, _, _ = Ph.phasor(img_concat)
+    dc_concat, g_concat, s_concat, _, _ = Ph.phasor(img_concat)
 
     '''
         En esta parte calculo el g y s por patches. Calculo el gi y si de cada uno de los 4 cuadrantes, promediando 
         las zonas de solapamiento para obtener un solo g y s. 
     '''
-    _, g1, s1, _, _ = Ph.phasor(im1)
-    _, g2, s2, _, _ = Ph.phasor(im2)
-    _, g3, s3, _, _ = Ph.phasor(im3)
-    _, g4, s4, _, _ = Ph.phasor(im4)
+    dc1, g1, s1, _, _ = Ph.phasor(im1)
+    dc2, g2, s2, _, _ = Ph.phasor(im2)
+    dc3, g3, s3, _, _ = Ph.phasor(im3)
+    dc4, g4, s4, _, _ = Ph.phasor(im4)
 
     # concateno y promedio los gi y si
     g_aux = np.asarray([g1, g2, g3, g4])
     s_aux = np.asarray([s1, s2, s3, s4])
-
+    dc_aux = np.asarray([dc1, dc2, dc3, dc4])
     g_fft = Ph.concat_d2(g_aux)
     s_fft = Ph.concat_d2(s_aux)
+    dc_fft = Ph.concat_d2(dc_aux)
 
     '''
         Ahora tengo:
@@ -134,24 +137,29 @@ while k < times:
 
     k = k + 1
 
-plt.figure(1)
-plt.plot(np.arange(times), psnr_gc, 'r*-', label='Concatenating')
-plt.plot(np.arange(times), psnr_gf, 'b*-', label='fft')
-plt.title('PSNR en G')
-plt.grid()
-plt.ylabel('dB')
-plt.legend(loc=1)
+fig_dc, axx = plt.subplots(1, 3, figsize=(15, 5))
+axx[0].imshow(dc, cmap='gray', interpolation='none')
+axx[0].set_title('Original average intensity')
+axx[1].imshow(dc_concat, cmap='gray', interpolation='none')
+axx[1].set_title('Concatenation')
+axx[2].imshow(dc_fft, cmap='gray', interpolation='none')
+axx[2].set_title('Patches')
 
-plt.figure(2)
-plt.plot(psnr_sc, 'r*-', label='Concatenating')
-plt.plot(psnr_sf, 'b*-', label='fft')
-plt.title('PSNR en S')
-plt.grid()
-plt.ylabel('dB')
-plt.legend(loc=1)
-plt.legend()
+fig_psnr, ax_psnr = plt.subplots(1, 2, figsize=(16, 4))
 
-plt.show()
+ax_psnr[0].plot(np.arange(times), psnr_gc, 'r*-', label='Concatenation')
+ax_psnr[0].plot(np.arange(times), psnr_gf, 'b*-', label='Patches')
+ax_psnr[0].set_title('PSNR: G image')
+ax_psnr[0].set_ylabel('dB')
+ax_psnr[0].legend(loc=1)
+ax_psnr[0].grid()
+
+ax_psnr[1].plot(np.arange(times), psnr_sc, 'r*-', label='Concatenation')
+ax_psnr[1].plot(np.arange(times), psnr_sf, 'b*-', label='Patches')
+ax_psnr[1].set_title('PSNR: S image')
+ax_psnr[1].set_ylabel('dB')
+ax_psnr[1].legend(loc=1)
+ax_psnr[1].grid()
 
 psnr_gc = np.mean(psnr_gc)
 psnr_gf = np.mean(psnr_gf)
@@ -191,26 +199,62 @@ if plot_err:
     cax = divider.append_axes('right', size='5%', pad=0.05)
     fig.colorbar(im4, cax=cax, orientation='vertical')
 
-    ax1.set_title("G concatenación")
-    ax2.set_title("G fft")
-    ax3.set_title("S concatenación")
-    ax4.set_title("S fft")
+    ax1.set_title("G concatenation")
+    ax2.set_title("G patches")
+    ax3.set_title("S concatenation")
+    ax4.set_title("S patches")
 
+    # diferencia del error entre ambos metodos
     e = abs(egc - egf) * 100000
     e = np.where(e < 255, e, 255)
+    e = e/np.max(e)
 
-    fig = plt.figure(3)
-    plt.title('Diferencia del error entre ambos metodos')
-    im = plt.imshow(e, cmap='gray')
+    fig_err = plt.figure(figsize=(6, 6))
+    ax_err = fig_err.add_subplot(111)
+    im_err = ax_err.imshow(e, cmap='gray', interpolation='None')
+    divider = make_axes_locatable(ax_err)
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig_err.colorbar(im_err, cax=cax, orientation='vertical')
+    ax_err.set_title('Normalized both methods difference')
 
-    '''
-        print('PSNR en G mediante concatenacion', psnr_gc)
-        print('PSNR en G mediante fft', psnr_gf)
-        print('PSNR en S mediante concatenacion', psnr_sc)
-        print('PSNR en S mediante fft', psnr_sf)
-    '''
+    # Grafico el error en la intersección para cada método
 
-    #  potencia del error en las intersecciones
+    err_aux1 = np.zeros(egc.shape)
+    err_egc = np.where(egc == egf, err_aux1, egc)
+    err_aux2 = np.zeros(egf.shape)
+    err_egf = np.where(egc == egf, err_aux2, egf)
+    err_aux3 = np.zeros(esc.shape)
+    err_esc = np.where(esc == esf, err_aux3, esc)
+    err_aux4 = np.zeros(esf.shape)
+    err_esf = np.where(esc == esf, err_aux4, esf)
+
+    fig2, ax2 = plt.subplots(2, 2, figsize=(10, 8))
+    img1 = ax2[0, 0].imshow(err_egc, cmap='gray', interpolation='none')
+    divider = make_axes_locatable(ax2[0, 0])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig2.colorbar(img1, cax=cax, orientation='vertical')
+    ax2[0, 0].set_title('Error through concatenation in G')
+
+    img2 = ax2[0, 1].imshow(err_egf, cmap='gray', interpolation='none')
+    divider = make_axes_locatable(ax2[0, 1])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig2.colorbar(img2, cax=cax, orientation='vertical')
+    ax2[0, 1].set_title('Error through patches in G')
+
+    img3 = ax2[1, 0].imshow(err_esc, cmap='gray', interpolation='none')
+    divider = make_axes_locatable(ax2[1, 0])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig2.colorbar(img3, cax=cax, orientation='vertical')
+    ax2[1, 0].set_title('Error through concatenation in S')
+
+    img4 = ax2[1, 1].imshow(err_esc, cmap='gray', interpolation='none')
+    divider = make_axes_locatable(ax2[1, 1])
+    cax = divider.append_axes('right', size='5%', pad=0.05)
+    fig2.colorbar(img4, cax=cax, orientation='vertical')
+    ax2[1, 1].set_title('Error through patches in S')
+
+
+    # PSNR en las intersecciones
     aux10 = np.zeros(egc.shape)
     pot_gc = np.where(egc == egf, aux10, egc)
     pot_gc = np.sum(pot_gc ** 2) / len(np.where(pot_gc != 0)[0])
@@ -234,12 +278,12 @@ if plot_err:
     psnr_sf_int = 10 * np.log10((255 ** 2) / pot_sf)  # PSNR
     sf_inter = np.where(egc == egf, aux11, s_fft)  # obtengo el s de la zona de solapamiento
 
-    print('------------------------------------------------------------------------------------------')
+    print('--------------------------------------------------------------------------------')
     print('PSNR en las intersecciones para G concat', psnr_gc_int)
     print('PSNR en las intersecciones para G fft', psnr_gf_int)
     print('PSNR en las intersecciones para S concat', psnr_sc_int)
     print('PSNR en las intersecciones para S fft', psnr_sf_int)
-    print('------------------------------------------------------------------------------------------')
+    print('--------------------------------------------------------------------------------')
 
 plot_phasor = True  # grafico el phasor de cada caso
 if plot_phasor:
@@ -247,13 +291,13 @@ if plot_phasor:
     g = [g_true, g_concat, g_fft]
     s = [s_true, s_concat, s_fft]
     icut = [1, 1, 1]
-    titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
+    titles = ['Gold standard', 'Concatenation', 'Patches']
     fig1 = Ph.phasor_plot(avg, g, s, icut, titles)
 
     # grafico el phasor en las zonas de intersección
     g2 = [g_gs_inter, gc_inter, gc_inter]
     s2 = [s_gs_inter, sc_inter, sf_inter]
-    titles = ['Gold standar', 'Mediante concatenación', 'Mediante fft']
+    titles = ['Gold standard', 'Concatenation', 'Patches']
     fig2 = Ph.phasor_plot(avg, g2, s2, icut, titles)
 
-    plt.show()
+plt.show()

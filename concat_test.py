@@ -2,33 +2,46 @@ import numpy as np
 import PhasorLibrary as phlib
 import tifffile
 import matplotlib.pyplot as plt
-from tifffile import imwrite, memmap
-import cv2
 
 
-'''En este codigo voy a probar como llego al phasor de la 2x2, entonces voy a usar una imagen 2x2 y calcular el phasor
-de cada canal y luego concatenar g, s, md, ph y dc. Además con esto ya pruebo guardar el ome.tiff comun y el 
-comprimido'''
+#  Pruebo la funcion concatenar con una imagen de negros y otra de blancos
+#  obtengo una imagen estilo damero con grises en la intersección
+prueba_damero = True
+if prueba_damero:
+    im1 = np.zeros([1024, 1024])
+    im2 = np.ones([1024, 1024]) * 256
+    dc = np.asarray([im1, im2, im1, im2, im2, im1, im2, im1, im1, im2, im1, im2, im2, im1, im2, im1])
+    dc = phlib.concatenate(dc, 4, 4, hper=0.05, vper=0.05)
 
+    plt.figure(1)
+    plt.imshow(dc, cmap='gray')
+    plt.show()
 
-#  Pruebo la funcion concatenar con una imagen sintetica estilo damero.
-'''
-i1 = cv2.imread('/home/bruno/Documentos/TESIS/gris.png', cv2.IMREAD_GRAYSCALE)
-i2 = cv2.imread('/home/bruno/Documentos/TESIS/negro.png', cv2.IMREAD_GRAYSCALE)
-dc = np.asarray([i1, i2, i1, i2, i2, i1, i2, i1, i1, i2, i1, i2, i2, i1, i2, i1])
-'''
+#  Pruebo la alineación con la imagen de la convalaría
+#  se observa que hay un corrimiento vertical
+#  y se ajusta utilizando otro porcentaje de solapamiento
+alineacion = True
+if alineacion:
+    route = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/Concat/')  # set your file route
+    fname = str('convalaria_alignment.lsm')
+    im = tifffile.imread(route + fname)
+    dc0 = phlib.concatenate(im, 2, 2, hper=0.0, vper=0.0)
+    dc1 = phlib.concatenate(im, 2, 2, hper=0.05, vper=0.05)
+    dc2 = phlib.concatenate(im, 2, 2, hper=0.07, vper=0.05)
 
-# f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Experimentos/caso_18370/lsm/18370_SP_Tile_2x2_b.lsm')
-f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/base de datos lsm/2022/MELANOMAS/16952_SP_Tile_4x3.lsm')
-# f1 = str('/home/bruno/Documentos/TESIS/TESIS/IMAGENES LSM/2022/MELANOMAS/20412_SP_Tile_11x6.lsm')
-# f1 = str('/home/bruno/Documentos/TESIS/TESIS/3x3_2avg.lsm')
-# f1 = str('/home/bruno/Documentos/Proyectos/TESIS/TESIS/pruebas algoritmos/concatenar/tiles_puebas/Image 4.lsm')
-im = tifffile.imread(f1)
+    inter = 'none'
 
-# Phasor tile
-dc, g, s, md, ph = phlib.phasor_tile(im, 1024, 1024)
-dc1 = phlib.concatenate(g, 3, 4)
+    fig, ax = plt.subplots(2, 3, figsize=(20, 12))
+    ax[0, 0].imshow(dc0[:1200, :1200], cmap='gray', interpolation=inter)
+    ax[0, 1].imshow(dc1[:1200, :1200], cmap='gray', interpolation=inter)
+    ax[0, 2].imshow(dc2[:1200, :1200], cmap='gray', interpolation=inter)
 
-plt.figure(1)
-plt.imshow(dc1, cmap='gray')
-plt.show()
+    ax[0, 0].set_title('Non overlap')
+    ax[0, 1].set_title('5% overlap')
+    ax[0, 2].set_title('5% vertical and 7% horizontal overlap')
+
+    ax[1, 0].imshow(dc0[850:1100, 100:950], cmap='gray', interpolation=inter)
+    ax[1, 1].imshow(dc1[850:1100, 100:950], cmap='gray', interpolation=inter)
+    ax[1, 2].imshow(dc2[850:1100, 100:950], cmap='gray', interpolation=inter)
+
+    plt.show()

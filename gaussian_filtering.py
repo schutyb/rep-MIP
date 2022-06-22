@@ -9,13 +9,12 @@ sigma = np.arange(0, 3, 0.1)
 mat_psnr = []
 arr_sg_opt = []
 for i in range(3):
-    route_2avg = str('/home/bruno/Documentos/TESIS/TESIS/filtrado/2avg/')
-    file_2avg = route_2avg + str(i + 1) + str('_2avg_3x3.lsm')
-    im_2avg = tifffile.imread(file_2avg)
-
-    route_16avg = str('/home/bruno/Documentos/TESIS/TESIS/filtrado/16avg/')
+    route_16avg = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/filtering/')
     file_16avg = route_16avg + str(i + 1) + str('_16avg_3x3.lsm')
     im_16avg = tifffile.imread(file_16avg)
+    route_2avg = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/filtering/')
+    file_2avg = route_2avg + str(i + 1) + str('_2avg_3x3.lsm')
+    im_2avg = tifffile.imread(file_2avg)
 
     for k in range(len(im_16avg)):
         dc_optimal = np.mean(im_16avg[k], axis=0)
@@ -36,7 +35,7 @@ for i in range(3):
 plt.figure(1)
 for i in range(len(mat_psnr)):
     plt.plot(sigma, mat_psnr[i], 'x-')
-plt.title('PSNR(sigma)')
+plt.title('PSNR (sigma)')
 plt.xlabel('Sigma (0 ; 4.75)')
 plt.ylabel('PSNR[dB]')
 plt.grid()
@@ -46,8 +45,8 @@ if prueba:
     # regiones interesantes img 2 indice 3, 4 y 5
     optimal_sg = np.mean(arr_sg_opt)
     print('The optimal sigma for gaussian kernel is:', optimal_sg)
-    im_2avg = tifffile.imread(str('/home/bruno/Documentos/TESIS/TESIS/filtrado/2avg/2_2avg_3x3.lsm'))
-    im_16avg = tifffile.imread(str('/home/bruno/Documentos/TESIS/TESIS/filtrado/16avg/2_16avg_3x3.lsm'))
+    im_2avg = tifffile.imread(str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/filtering/1_2avg_3x3.lsm'))
+    im_16avg = tifffile.imread(str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/filtering/1_16avg_3x3.lsm'))
     ind = 3
     optimal_filtered = gaussian(np.mean(im_2avg[ind], axis=0), sigma=optimal_sg)
     inter = str('none')

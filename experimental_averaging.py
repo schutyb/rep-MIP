@@ -10,7 +10,7 @@ from PhasorLibrary import phasor_plot
     none avg, twice, 4, 8 and 16 times, taking 16 times avg as the gold standard. 
     It is used the PSNR as the metric for the error evaluation. 
 '''
-route = str('/home/bruno/Documentos/TESIS/TESIS/estudio del ruido/exp avg/all_avereaging/')
+route = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/experimental averaging/')
 avg = [1, 2, 4, 8, 16]
 g = []
 s = []
@@ -38,8 +38,14 @@ for i in range(4):
 print('PSNR for G:', arr_psrn_g)
 print('PSNR for S:', arr_psrn_s)
 
+xlabel = ['PSNR G ' + str(round(arr_psrn_g[0])) + 'dB' + '\n' + 'PSNR S ' + str(round(arr_psrn_s[0])) + 'dB',
+          'PSNR G ' + str(round(arr_psrn_g[1])) + 'dB' + '\n' + 'PSNR S ' + str(round(arr_psrn_s[1])) + 'dB',
+          'PSNR G ' + str(round(arr_psrn_g[2])) + 'dB' + '\n' + 'PSNR S ' + str(round(arr_psrn_s[2])) + 'dB',
+          'PSNR G ' + str(round(arr_psrn_g[3])) + 'dB' + '\n' + 'PSNR S ' + str(round(arr_psrn_s[3])) + 'dB',
+          'Gold Standard']
+xlabel = np.asarray(xlabel)
 ic = np.zeros(len(dc))
-titles = ['No averaging', 'Twice averaging', '4 times avg', '8 times avg', '16 times avg']
-phasor_plot(dc, g, s, ic, title=titles, same_phasor=False)
+titles = ['No averaging', 'Twice averaging', '4 times averaging', '8 times averaging', '16 times averaging']
+phasor_plot(dc, g, s, ic, title=titles, same_phasor=False, xlabel=xlabel)
 plt.show()
 

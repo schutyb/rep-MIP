@@ -66,13 +66,12 @@ def phasor_tile(im_stack, dimx, dimy):
 def generate_file(filename, gsa):
     """
     :param filename: Type string characters. The name of the file to be written, with the extension ome.tiff
-    :param gsa: Type n-dimensional array holding the data to be stored. It usually has the mxm images of
-    g,s and the average image.
+    :param gsa: Type n-dimensional array holding the data to be stored.
     :return file: The file storing the data. If the filename extension was ome.tiff the file is an
     ome.tiff format.
     """
 
-    imwrite(filename, data=gsa)
+    imwrite(filename, data=gsa, compression='zlib')
     file = memmap(filename)
     file.flush()
 

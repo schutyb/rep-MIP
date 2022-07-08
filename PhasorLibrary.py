@@ -4,6 +4,7 @@ import matplotlib.pyplot as plt
 from matplotlib import colors
 from skimage.filters import median
 from matplotlib.widgets import Cursor
+import colorsys
 
 
 def phasor(image_stack, harmonic=1):
@@ -544,12 +545,41 @@ def im_thresholding(im, x1, x2):
     """
     if not im.shape:
         raise ValueError("Input image is not dimensionally correct")
-    elif not (x1.isdigit() and x2.isdigit()):
-        raise ValueError("x1 or x2 are not float type")
+    #elif not (x1.isdigit() and x2.isdigit()):
+        #raise ValueError("x1 or x2 are not float type")
     else:
         aux = np.where(im != 0, im, 1000)
-        aux = np.where(aux < x1, x1, aux)
+        aux = np.where(aux < x1, 0, aux)
         aux = np.where(aux == 1000, 0, aux)
-        aux = np.where(aux > x2, x2, aux)
+        aux = np.where(aux > x2, 0, aux)
     return aux
+
+
+def color_normalization(ph, md, phinterval, mdinterval):
+    """
+    :param ph: Nd-array. Phase
+    :param md: Nd-array. Modulation
+    :param phinterval: array contains the max and min of phase to normalize the phase image
+    :param mdinterval: array contains the max and min of modulation to normalize the modulation image
+    :return: rgb the colored image in RGB space
+    :return: hsv the colored image in HSV space
+    """
+    if not ((len(ph.shape) == 2) and (len(md.shape) == 2)):
+        raise ErrorValue("Dimension error in phase matrix or modulation matrix")
+    if not(ph.shape == md.shape):
+        raise ErrorValue("Phase and Modulation matrix: Dimension not match")
+    if not(len(phinterval) == 2 and len(mdinterval) == 2):
+        raise ErrorValue("phinterval or mdinterval: arrays length is not 2")
+
+    hsv = np.ones([ph.shape[0], ph.shape[1], 3])
+    rgb = np.zeros(hsv.shape)
+    for i in range(hsv.shape[0]):
+        for j in range(hsv.shape[1]):
+            if ph[i][j] == 0:
+                hsv[i][j][:] = (0, 0, 0)  # set hvs to 0 and rgb is already 0 in its 3 coordinates
+            else:
+                hsv[i][j][0] = (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
+                hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
+                rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
+    return rgb, hsv
 

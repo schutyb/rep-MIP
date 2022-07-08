@@ -4,7 +4,6 @@ import matplotlib.pyplot as plt
 import PhasorLibrary as PhLib
 import colorsys
 
-
 hist_mod = tifffile.imread('/home/bruno/Documentos/TESIS/TESIS/Modelado/hist_mod.ome.tiff')
 hist_ph = tifffile.imread('/home/bruno/Documentos/TESIS/TESIS/Modelado/hist_phase.ome.tiff')
 
@@ -29,28 +28,32 @@ if plotty:
     ax[1].plot([auxph[0], auxph[0]], [0, max(hist_ph[0])], 'r')
     ax[1].plot([auxph[len(auxph) - 1], auxph[len(auxph) - 1]], [0, max(hist_ph[0])], 'r')
 
+    print('Modulation interval', '[', str(round(min(auxmd), 4)), ',', str(round(auxmd[len(auxmd) - 1], 4)), ']')
+    print('Phase interval', '[', str(round(min(auxph), 4)), ',', str(round(auxph[len(auxph) - 1], 4)), ']')
 
-print('Modulation interval', '[', str(round(min(auxmd), 4)), ',', str(round(auxmd[len(auxmd) - 1], 4)), ']')
-print('Phase interval', '[', str(round(min(auxph), 4)), ',', str(round(auxph[len(auxph) - 1], 4)), ']')
+    #  con las dimensiones y los rangos de mod y phase creo la LUT
+    hsv = np.ones([len(auxph), len(auxmd), 3])
+    rgb = np.zeros(hsv.shape)
+    for i in range(len(auxph)):
+        for j in range(len(auxmd)):
+            hsv[i][j][0] = (auxph[i] - min(auxph)) / abs(max(auxph) - min(auxph))
+            hsv[i][j][1] = (auxmd[j] - min(auxmd)) / abs(max(auxmd) - min(auxmd))
+            rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
 
-#  con las dimensiones y los rangos de mod y phase creo la LUT
-hsv = np.ones([len(auxph), len(auxmd), 2])
-rgb = np.zeros(hsv.shape)
+    Fig = plt.figure()
+    plt.imshow(rgb)
+    plt.axis('off')
+    plt.show()
 
-for i in range(len(auxph)):
-    for j in range(len(auxmd)):
-        hsv[i][j][0] = (auxph[i] - (min(auxph))) / (abs(max(auxph) - min(auxph)))
-        hsv[i][j][1] = (auxmd[j] - (min(auxmd) - 0.05)) / abs(max(auxmd) - min(auxmd))
-        # rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
 
-'''Fig = plt.figure()
-plt.imshow(rgb)
-plt.axis('off')
-# plt.show()'''
+phinterval = np.asarray([min(auxph), max(auxph)])
+mdinterval = np.asarray([min(auxmd), max(auxmd)])
 
-plt.clf()
-fig = plt.figure(figsize=[5, 5])
-ax = fig.add_axes([0.1, 0.1, 0.8, 0.8], polar=True)
-thetas_radians = np.arange(0,2.01*np.pi,np.pi/100.)
-radii = np.arange(0,101,1)
-ax.pcolormesh(thetas_radians, radii, hsv, edgecolors='face')
+im = tifffile.imread('/home/bruno/Documentos/TESIS/TESIS/Modelado/15410.ome.tiff')
+ph = PhLib.im_thresholding(im[4], phinterval[0], phinterval[1])
+md = PhLib.im_thresholding(im[3], mdinterval[0], mdinterval[1])
+rgb, hsv = PhLib.color_normalization(ph, md, phinterval, mdinterval)
+
+plt.figure(1)
+plt.imshow(rgb, interpolation='spline16')
+plt.show()

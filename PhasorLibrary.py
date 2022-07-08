@@ -262,17 +262,16 @@ def rgb_coloring(dc, g, s, ic, center, Ro):
     rgba = cmap(norm(img_new))
 
     # Set the colors
-    rgba[indices1[0], indices1[1], :3] = 1, 0, 0  # blue
+    rgba[indices1[0], indices1[1], :3] = 1, 0, 0  # red
     rgba[indices2[0], indices2[1], :3] = 0, 1, 0  # green
-    rgba[indices3[0], indices3[1], :3] = 0, 0, 1  # red
+    rgba[indices3[0], indices3[1], :3] = 0, 0, 1  # blue
 
     return rgba
 
 
-def phasor_plot(dc, g, s, ic, title=None, xlabel=None, same_phasor=False):
+def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
     """
         Plots nth phasors in the same figure.
-    :param xlabel: x label for each phasor plot
     :param dc: image stack with all the average images related to each phasor nxn dimension.
     :param g: nxn dimension image.
     :param s: nxn dimension image.
@@ -295,7 +294,7 @@ def phasor_plot(dc, g, s, ic, title=None, xlabel=None, same_phasor=False):
         num_phasors = len(dc)
         # create the figures with all the phasors in each axes or create only one phasor
         if num_phasors > 1:
-            fig, ax = plt.subplots(1, num_phasors, figsize=(18, 5))
+            fig, ax = plt.subplots(1, num_phasors, figsize=(13, 4))
             fig.suptitle('Phasor')
             for k in range(num_phasors):
                 x, y = (histogram_thresholding(dc[k], g[k], s[k], ic[k]))
@@ -303,8 +302,6 @@ def phasor_plot(dc, g, s, ic, title=None, xlabel=None, same_phasor=False):
                 ax[k].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
                 if len(title) > 1:
                     ax[k].set_title(title[k])
-                    if xlabel:
-                        ax[k].set_xlabel(xlabel[k])
                 if same_phasor:
                     ax[k].set_xlabel('ic' + '=' + str(ic[k]))
 
@@ -445,15 +442,15 @@ def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
     return ax
 
 
-def concatenate(im, m, n, hper=0.07, vper=0.05, bidirectional=False):
+def concatenate(im, m, n, hper=0.07, vper=0.05):
     """
         This function concatenate a stack image from mxn images create an m x n only image.
-    :param im: image stack to be concatenated, containing mxn images. The dimension is 1 x (nxm).
+    :param vper:
+    :param hper:
+    :param im: image stack to be concatenate, containing mxn images. The dimension is 1 x (nxm).
     :param m: number of vertical images
     :param n: number of horizontal images
-    :param hper: horizontal percentage of overlap
-    :param vper: vertical percentage of overlap
-    :param bidirectional: Optional, set true if the image tile are bidirectional array
+    :param per: percentage of overlap
     :return: concatenated image
     """
     d = im.shape[1]
@@ -463,32 +460,17 @@ def concatenate(im, m, n, hper=0.07, vper=0.05, bidirectional=False):
     i = 0
     j = 0
     while j < m * n:
-        if bidirectional and (j % 2 != 0):
-            aux[i * d: i * d + d, 0:d] = im[j + (n - 1)][0:, 0:d]  # store the first image horizontally
-        else:
-            aux[i * d: i * d + d, 0:d] = im[j][0:, 0:d]  # store the first image horizontally
+        aux[i * d: i * d + d, 0:d] = im[j][0:, 0:d]  # store the first image horizontally
         k = 1
         acum = 0
-        if bidirectional and (j % 2 != 0):
-            while k < n:
-                ind1 = round(((1 - vper) + acum) * d)
-                ind2 = round(ind1 + vper * d)
-                ind3 = round(ind2 + (1 - vper) * d)
-                aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + (n - k - 1)][0:,
-                                                                                     0:round(vper * d)]) / 2
-                aux[i * d:i * d + d, ind2:ind3] = im[j + (n - k - 1)][0:, round(vper * d):d]
-                acum = (1 - vper) + acum
-                k = k + 1
-        else:
-            while k < n:
-                ind1 = round(((1 - vper) + acum) * d)
-                ind2 = round(ind1 + vper * d)
-                ind3 = round(ind2 + (1 - vper) * d)
-                aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + k][0:,
-                                                                                     0:round(vper * d)]) / 2
-                aux[i * d:i * d + d, ind2:ind3] = im[j + k][0:, round(vper * d):d]
-                acum = (1 - vper) + acum
-                k = k + 1
+        while k < n:
+            ind1 = round(((1 - vper) + acum) * d)
+            ind2 = round(ind1 + vper * d)
+            ind3 = round(ind2 + (1 - vper) * d)
+            aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + k][0:, 0:round(vper * d)]) / 2
+            aux[i * d:i * d + d, ind2:ind3] = im[j + k][0:, round(vper * d):d]
+            acum = (1 - vper) + acum
+            k = k + 1
         i = i + 1
         j = j + n
 
@@ -515,6 +497,59 @@ def concatenate(im, m, n, hper=0.07, vper=0.05, bidirectional=False):
 
 
 def psnr(img_optimal, img):
-    mse = np.mean(abs(img_optimal - img) ** 2)
-    val_psnr = 10 * np.log10((255 ** 2) / mse)
-    return val_psnr
+    """
+    :param img_optimal: Nd-array image. Should contain the gold standard image.
+    :param img: Nd-array image. Image to be compared
+    :return: Float value. Peak Signal to Noise Ratio.
+    """
+    if img_optimal.shape and img.shape and (img_optimal.shape == img.shape):
+        MSE = np.mean(abs(img_optimal - img) ** 2)
+        psnr_aux = 10 * np.log10((255 ** 2) / MSE)
+    else:
+        raise ValueError("Images dimension do not much")
+    return psnr_aux
+
+
+def md_ph_thresholding(hist, bins, per):
+    """
+    :param hist: One dimensional array, length n
+    :param bins: One dimensional array, length n
+    :param per: percentage of the maximum hist value to be considered
+    :return: acum: the array containing the threshold bins
+    """
+    if not len(hist):
+        raise ValueError("histogram dimension or type is not correct (dim = 1xn and type: ndarray)")
+    if not len(bins):
+        raise ValueError("bins dimension or type is not correct (dim = 1xn and type: ndarray)")
+    if not (len(hist) == len(bins)):
+        raise ValueError("histogram array length and bins array length do not much")
+    if not (0 <= per <= 1):
+        raise ValueError("per must be a float in [0;1]")
+    else:
+        acum = []
+        for ind in range(len(hist)):
+            if hist[ind] > round(per * max(hist)):
+                acum.append(bins[ind])
+
+    return np.asarray(acum)
+
+
+def im_thresholding(im, x1, x2):
+    """
+        Considering an image whose entry values are [0, 255].
+    :param im: Nd-array contains the original image to be threshold
+    :param x1: float value, minimal value of the left side
+    :param x2: float value, maximal value of the right side
+    :return: Nd-array image threshold
+    """
+    if not im.shape:
+        raise ValueError("Input image is not dimensionally correct")
+    elif not (x1.isdigit() and x2.isdigit()):
+        raise ValueError("x1 or x2 are not float type")
+    else:
+        aux = np.where(im != 0, im, 1000)
+        aux = np.where(aux < x1, x1, aux)
+        aux = np.where(aux == 1000, 0, aux)
+        aux = np.where(aux > x2, x2, aux)
+    return aux
+

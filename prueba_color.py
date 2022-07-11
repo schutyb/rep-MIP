@@ -11,7 +11,20 @@ per = 0.001
 auxph = PhLib.md_ph_thresholding(hist_ph[0], hist_ph[1], per)
 auxmd = PhLib.md_ph_thresholding(hist_mod[0], hist_mod[1], per)
 
-plotty = False
+phinterval = np.asarray([min(auxph), max(auxph)])
+mdinterval = np.asarray([min(auxmd), max(auxmd)])
+
+'''
+im = tifffile.imread('/home/bruno/Documentos/TESIS/TESIS/Modelado/15719.ome.tiff')
+ph = PhLib.im_thresholding(im[4], phinterval[0], phinterval[1])
+md = PhLib.im_thresholding(im[3], mdinterval[0], mdinterval[1])
+rgb, hsv = PhLib.color_normalization(ph, md, phinterval, mdinterval)
+'''
+
+# filename = '/home/bruno/Documentos/TESIS/TESIS/Modelado/rgb/rgb-15719.ome.tiff'
+# PhLib.generate_file(filename, rgb)
+
+plotty = True
 if plotty:
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
     ax[0].bar(hist_mod[1], hist_mod[0], width=0.1, align='edge')
@@ -40,20 +53,14 @@ if plotty:
             hsv[i][j][1] = (auxmd[j] - min(auxmd)) / abs(max(auxmd) - min(auxmd))
             rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
 
-    Fig = plt.figure()
+    fig_sp = plt.figure(2)
+    plt.imshow(hsv)
+    # plt.axis('off')
+
+    plt.figure(3)
     plt.imshow(rgb)
-    plt.axis('off')
+
+    # filename = '/home/bruno/Documentos/TESIS/TESIS/Modelado/rgb/rgb_hsv.ome.tiff'
+    # PhLib.generate_file(filename, [rgb, hsv])
+
     plt.show()
-
-
-phinterval = np.asarray([min(auxph), max(auxph)])
-mdinterval = np.asarray([min(auxmd), max(auxmd)])
-
-im = tifffile.imread('/home/bruno/Documentos/TESIS/TESIS/Modelado/15410.ome.tiff')
-ph = PhLib.im_thresholding(im[4], phinterval[0], phinterval[1])
-md = PhLib.im_thresholding(im[3], mdinterval[0], mdinterval[1])
-rgb, hsv = PhLib.color_normalization(ph, md, phinterval, mdinterval)
-
-plt.figure(1)
-plt.imshow(rgb, interpolation='spline16')
-plt.show()

@@ -48,14 +48,14 @@ if plotty:
     rgb = np.zeros(hsv.shape)
     for i in range(len(auxph)):
         for j in range(len(auxmd)):
-            hsv[i][j][0] = (auxph[i] - min(auxph)) / abs(max(auxph) - min(auxph))
+            hsv[i][j][0] = 0.95 * (auxph[i] - min(auxph)) / abs(max(auxph) - min(auxph))
             hsv[i][j][1] = (auxmd[j] - min(auxmd)) / abs(max(auxmd) - min(auxmd))
             rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
 
     # rgb lut plot
     xlabels = np.zeros(10)
     for i in range(len(xlabels)):
-        xlabels[i] = round(auxmd[i * int(len(auxmd) / len(xlabels))], 4)
+        xlabels[i] = round(auxmd[i * int(len(auxmd) / (len(xlabels)))], 4)
 
     fig2, ax2 = plt.subplots(figsize=(10, 6))
     ax2.imshow(rgb, interpolation='none', extent=[0, 180, phinterval[0], phinterval[1]])

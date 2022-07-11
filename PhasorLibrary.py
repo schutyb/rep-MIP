@@ -72,7 +72,8 @@ def generate_file(filename, gsa):
     ome.tiff format.
     """
 
-    imwrite(filename, data=gsa, compression='zlib')
+    # imwrite(filename, data=gsa, compression='zlib')
+    imwrite(filename, data=gsa)
     file = memmap(filename)
     file.flush()
 
@@ -511,8 +512,10 @@ def psnr(img_optimal, img):
     return psnr_aux
 
 
-def md_ph_thresholding(hist, bins, per):
+def segment_thresholding(hist, bins, per):
     """
+        Given an histogram and a percentage the function returns a cut histogram
+        preserving the values where the histogram is over the percentage * max(hist)
     :param hist: One dimensional array, length n
     :param bins: One dimensional array, length n
     :param per: percentage of the maximum hist value to be considered
@@ -545,12 +548,12 @@ def im_thresholding(im, x1, x2):
     """
     if not im.shape:
         raise ValueError("Input image is not dimensionally correct")
-    #elif not (x1.isdigit() and x2.isdigit()):
-        #raise ValueError("x1 or x2 are not float type")
+    # elif not (x1.isdigit() and x2.isdigit()):
+        # raise ValueError("x1 or x2 are not float type")
     else:
-        aux = np.where(im != 0, im, 1000)
+        aux = np.where(im != 0, im, 100 * abs(np.max(im)))
         aux = np.where(aux < x1, 0, aux)
-        aux = np.where(aux == 1000, 0, aux)
+        aux = np.where(aux == 100 * abs(np.max(im)), 0, aux)
         aux = np.where(aux > x2, 0, aux)
     return aux
 

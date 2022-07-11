@@ -29,7 +29,7 @@ imcolor, _ = PhLib.color_normalization(im[3], im[4], phinterval, mdinterval, mod
 rgb = tifffile.imread(path + 'rgb.ome.tiff')
 x, y = PhLib.phasor_threshold(im[1], im[2], im[3], im[4], phinterval, mdinterval)
 
-plot = False
+plot = True
 if plot:  # phasor plot and pseudocolor rgb
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
     ax[0].hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [0, 1]])

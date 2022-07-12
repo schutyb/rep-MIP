@@ -10,6 +10,8 @@ from PhasorLibrary import phasor_plot
     none avg, twice, 4, 8 and 16 times, taking 16 times avg as the gold standard. 
     It is used the PSNR as the metric for the error evaluation. 
 '''
+
+# The data to test this scripts are the images called (1, 2, 4, 8, 16)avg.lsm
 route = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/experimental averaging/')
 avg = [1, 2, 4, 8, 16]
 g = []

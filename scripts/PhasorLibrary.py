@@ -29,7 +29,7 @@ def phasor(image_stack, harmonic=1):
     dc = np.where(dc != 0, dc, int(np.mean(dc)))  # change the zeros to the img average
 
     g = data[harmonic].real
-    g /= -dc
+    g /= dc
     s = data[harmonic].imag
     s /= -dc
 
@@ -258,7 +258,7 @@ def rgb_coloring(dc, g, s, ic, center, Ro):
     return rgba
 
 
-def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
+def phasor_plot(dc, g, s, ic=None, title=None, same_phasor=False):
     """
         Plots nth phasors in the same figure.
     :param dc: image stack with all the average images related to each phasor nxn dimension.
@@ -271,13 +271,15 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
     """
 
     #  check that the files are correct
-    if not (len(dc) == len(g) and len(g) == len(s) and len(dc) == len(ic)):
+    global fig
+    if not (len(dc) == len(g) and len(g) == len(s)):
         raise ValueError("dc, g and s dimension do not match or ic dimension is not correct")
-
     if not len(dc) != 0:
         raise ValueError("Some input image stack is empty")
+    if ic is None:
+        ic = [0]
 
-    else:
+    if len(dc) == len(ic):
         if title is None:
             title = ['Phasor']
         num_phasors = len(dc)
@@ -301,6 +303,8 @@ def phasor_plot(dc, g, s, ic, title=None, same_phasor=False):
             ax.set_title('Phasor')
             phasor_circle(ax)
         return fig
+    else:
+        raise ValueError("dc and ic have different length")
 
 
 def interactive(dc, g, s, Ro):
@@ -318,6 +322,7 @@ def interactive(dc, g, s, Ro):
     fig, ax = plt.subplots(2, 2, figsize=(20, 12))
 
     ax[0, 0].imshow(dc, cmap='gray')
+    ax[0, 0].axis('off')
     ax[0, 0].set_title('Average intensity image')
     ax[0, 1].hist(dc.flatten(), bins=256, range=(0, 256))
     ax[0, 1].set_yscale("log")
@@ -337,6 +342,7 @@ def interactive(dc, g, s, Ro):
     rgba = rgb_coloring(dc, g, s, ic, center, Ro)
     ax[1, 1].imshow(rgba)
     ax[1, 1].set_title('Pseudocolor image')
+    ax[1, 1].axis('off')
     plt.show()
 
     return fig
@@ -526,7 +532,7 @@ def segment_thresholding(hist, bins, per):
 
 def im_thresholding(im, x1, x2):
     """
-        Considering an image whose entry values are [0, 255].
+        Considering an image whose entry values are [0, 255]. Threshold an image from x1 to x2
     :param im: Nd-array contains the original image to be threshold
     :param x1: float value, minimal value of the left side
     :param x2: float value, maximal value of the right side
@@ -544,7 +550,8 @@ def im_thresholding(im, x1, x2):
     return aux
 
 
-def color_normalization(md, ph, phinterval, mdinterval, threshold=True, modulation=True):
+def color_normalization(md, ph, phinterval=np.asarray([0, 360]), mdinterval=np.asarray([0, 1]), threshold=True,
+                        modulation=True):
     """
         Given the modulation and phase it returns the pseudo color image in RGB
     :param modulation: Modulation True allows to use the modulation information in the colored image

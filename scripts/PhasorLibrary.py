@@ -2,15 +2,17 @@ import numpy as np
 from tifffile import imwrite, memmap
 import matplotlib.pyplot as plt
 from matplotlib import colors
-from skimage.filters import median
 from matplotlib.widgets import Cursor
 import colorsys
 
 
+# TODO add all the raise ValueError in all the function
+# TODO create only one phasor function that compute both im stack and tiles stacks
 def phasor(image_stack, harmonic=1):
     """
         This function computes the average intensity image, the G and S coordinates of the phasor.
     As well as the modulation and phase.
+
     :param image_stack: is a file with spectral mxm images to calculate the fast fourier transform from
     numpy library.
     :param harmonic: int. The number of the harmonic where the phasor is calculated.
@@ -71,18 +73,17 @@ def generate_file(filename, gsa):
     :return file: The file storing the data. If the filename extension was ome.tiff the file is an
     ome.tiff format.
     """
-
-    # imwrite(filename, data=gsa, compression='zlib')
+    # todo crete the compression option in order to store small data
     imwrite(filename, data=gsa)
     file = memmap(filename)
     file.flush()
-
     return file
 
 
-def concat_d2(im):
+def concat_d2(im, per=0.05):
     """
         Concatenate a stack of images whose dimension is 2x2xn
+    :param per: percentage of overlapping
     :param im: stack image with the images to be concatenated. It is a specific 2x2 concatenation.
     :return: im_concat it is an image stack with the concatenated images.
     """
@@ -92,7 +93,7 @@ def concat_d2(im):
     # Caso 1 donde es una imagen de 4 partes y un solo canal
     if len(im.shape) == 3 and im.shape[0] == 4:
         d = 1024
-        l = int(d * 0.05)
+        l = int(d * per)
         m = int(d / 2 + l)
         n = int(d / 2 - l)
 
@@ -122,12 +123,12 @@ def concat_d2(im):
         im_concat[n:m, 0:n] = imp3
         im_concat[n:m, m:d] = imp4
 
-    # Caso 2 donde es una imagen de 4 partes y mas de un canal
+    # Caso 2 donde es una imagen de 4 partes y más de un canal
     elif len(im.shape) == 4 and im.shape[0] == 4:
         d = 1024
         t = im.shape[1]
         s = im.shape[2]
-        l = int(d * 0.05)
+        l = int(d * per)
         m = int(d / 2 + l)
         n = int(d / 2 - l)
 
@@ -171,21 +172,6 @@ def concat_d2(im):
     return im_concat
 
 
-def ndmedian(im, filttime=0):
-    """
-        Performe an nd median filter
-    :param im: ndarray usually an image to be filtered.
-    :param filttime: numbers of time to be filtered im.
-    :return: ndarray with the filtered image.
-    """
-    imfilt = np.copy(im)
-    i = 0
-    while i < filttime:
-        imfilt = median(imfilt)
-        i = i + 1
-    return imfilt
-
-
 def histogram_thresholding(dc, g, s, ic):
     """
         Use this function to filter the background deleting, those pixels where the intensity value is under ic.
@@ -195,6 +181,7 @@ def histogram_thresholding(dc, g, s, ic):
     :param ic: intensity cut umbral.
     :return: x, y. Arrays contain the G and S phasor coordinates.
     """
+
     """store the coordinate to plot in the phasor"""
     aux = np.concatenate(np.where(dc > ic, dc, np.zeros(dc.shape)))
     g2 = np.concatenate(g)
@@ -452,7 +439,6 @@ def concatenate(im, m, n, hper=0.07, vper=0.05):
     :param im: image stack to be concatenate, containing mxn images. The dimension is 1 x (nxm).
     :param m: number of vertical images
     :param n: number of horizontal images
-    :param per: percentage of overlap
     :return: concatenated image
     """
     d = im.shape[1]
@@ -505,8 +491,8 @@ def psnr(img_optimal, img):
     :return: Float value. Peak Signal to Noise Ratio.
     """
     if img_optimal.shape and img.shape and (img_optimal.shape == img.shape):
-        MSE = np.mean(abs(img_optimal - img) ** 2)
-        psnr_aux = 10 * np.log10((255 ** 2) / MSE)
+        mse = np.mean(abs(img_optimal - img) ** 2)
+        psnr_aux = 10 * np.log10((255 ** 2) / mse)
     else:
         raise ValueError("Images dimension do not much")
     return psnr_aux
@@ -514,7 +500,7 @@ def psnr(img_optimal, img):
 
 def segment_thresholding(hist, bins, per):
     """
-        Given an histogram and a percentage the function returns a cut histogram
+        Given a histogram and a percentage the function returns a cut histogram
         preserving the values where the histogram is over the percentage * max(hist)
     :param hist: One dimensional array, length n
     :param bins: One dimensional array, length n
@@ -548,8 +534,8 @@ def im_thresholding(im, x1, x2):
     """
     if not im.shape:
         raise ValueError("Input image is not dimensionally correct")
-    # elif not (x1.isdigit() and x2.isdigit()):
-        # raise ValueError("x1 or x2 are not float type")
+    # elif not (x1.isdigit() and x2.isdigit()): todo check if x1 and x2 are digits
+    # raise ValueError("x1 or x2 are not float type")
     else:
         aux = np.where(im != 0, im, 100 * abs(np.max(im)))
         aux = np.where(aux < x1, 0, aux)
@@ -558,8 +544,12 @@ def im_thresholding(im, x1, x2):
     return aux
 
 
-def color_normalization(ph, md, phinterval, mdinterval):
+def color_normalization(md, ph, phinterval, mdinterval, threshold=True, modulation=True):
     """
+        Given the modulation and phase it returns the pseudo color image in RGB
+    :param modulation: Modulation True allows to use the modulation information in the colored image
+                        Set modulation False to get modulation=1 highest intensity
+    :param threshold: compute the thresholding histogram if it is True.
     :param ph: Nd-array. Phase
     :param md: Nd-array. Modulation
     :param phinterval: array contains the max and min of phase to normalize the phase image
@@ -568,11 +558,11 @@ def color_normalization(ph, md, phinterval, mdinterval):
     :return: hsv the colored image in HSV space
     """
     if not ((len(ph.shape) == 2) and (len(md.shape) == 2)):
-        raise ErrorValue("Dimension error in phase matrix or modulation matrix")
-    if not(ph.shape == md.shape):
-        raise ErrorValue("Phase and Modulation matrix: Dimension not match")
-    if not(len(phinterval) == 2 and len(mdinterval) == 2):
-        raise ErrorValue("phinterval or mdinterval: arrays length is not 2")
+        raise ValueError("Dimension error in phase matrix or modulation matrix")
+    if not (ph.shape == md.shape):
+        raise ValueError("Phase and Modulation matrix: Dimension not match")
+    if not (len(phinterval) == 2 and len(mdinterval) == 2):
+        raise ValueError("phinterval or mdinterval: arrays length is not 2")
 
     hsv = np.ones([ph.shape[0], ph.shape[1], 3])
     rgb = np.zeros(hsv.shape)
@@ -580,9 +570,58 @@ def color_normalization(ph, md, phinterval, mdinterval):
         for j in range(hsv.shape[1]):
             if ph[i][j] == 0:
                 hsv[i][j][:] = (0, 0, 0)  # set hvs to 0 and rgb is already 0 in its 3 coordinates
+                rgb[i][j][:] = (0, 0, 0)
+            if threshold:
+                if (phinterval[0] <= ph[i][j] <= phinterval[1]) and (mdinterval[0] <= md[i][j] <= mdinterval[1]):
+                    hsv[i][j][0] = 0.95 * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
+                    hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
+                    if modulation:
+                        rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
+                    else:
+                        rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], 1, 1)
+
+                else:
+                    hsv[i][j][:] = (0, 0, 0)
+                    rgb[i][j][:] = (0, 0, 0)
+
             else:
-                hsv[i][j][0] = (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
+                hsv[i][j][0] = 0.95 * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
                 hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
-                rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
+                if modulation:
+                    rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
+                else:
+                    rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], 1, 1)
+
     return rgb, hsv
 
+
+def phasor_threshold(g, s, md, ph, phinterval, mdinterval):
+    """
+        Return the phasor coordinates G and S after thresholding.
+    :param mdinterval: 1d array modulation values interval
+    :param phinterval: 1d array phase interval
+    :param md: nd-array modulation image
+    :param ph: nd-array phase image
+    :param g: nxn dimension image.
+    :param s: nxn dimension image.
+    :return: the phasor figure and x and y arrays containing the G and S values.
+    """
+
+    #  check that the files are correct
+    if not len(g) == len(s):
+        raise ValueError("g and s dimensions do not match")
+
+    if not len(g) != 0:
+        raise ValueError("Some input image stack is empty")
+
+    else:
+        ph2 = im_thresholding(ph, phinterval[0], phinterval[1])
+        md2 = im_thresholding(md, mdinterval[0], mdinterval[1])
+        lut = np.where((ph2 * md2) == 0, 0, 1)
+        aux = g * s * lut
+        g2 = np.concatenate(g * lut)
+        s2 = np.concatenate(s * lut)
+        x = np.delete(g2, np.where(aux != 0))
+        y = np.delete(s2, np.where(aux != 0))
+
+    return x, y

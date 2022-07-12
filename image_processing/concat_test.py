@@ -20,6 +20,7 @@ if prueba_damero:
 #  Pruebo la alineación con la imagen de la convalaría
 #  se observa que hay un corrimiento vertical
 #  y se ajusta utilizando otro porcentaje de solapamiento
+#  se utilizan los datos convalaria_alignment.lsm
 alineacion = True
 if alineacion:
     route = str('/home/bruno/Documentos/Proyectos/TESIS/MIP/data/Concat/')  # set your file route

@@ -550,13 +550,12 @@ def im_thresholding(im, x1, x2):
     return aux
 
 
-def color_normalization(md, ph, phinterval=np.asarray([0, 360]), mdinterval=np.asarray([0, 1]), threshold=True,
-                        modulation=True):
+def colored_image(ph, phinterval, md=None, mdinterval=None, outlier_cut=True, color_scale=0.95):
     """
-        Given the modulation and phase it returns the pseudo color image in RGB
-    :param modulation: Modulation True allows to use the modulation information in the colored image
-                        Set modulation False to get modulation=1 highest intensity
-    :param threshold: compute the thresholding histogram if it is True.
+        Given the modulation and phase it returns the pseudo color image in RGB normalizing the phase and modulation
+        intro [0, 1] in order to obtain the RGB
+    :param color_scale: Percentage of the fase color between 0 and 360 degrees it is used in the scale
+    :param outlier_cut: Set True to set to black the phasor outliers and False to set these pixels to the max and min
     :param ph: Nd-array. Phase
     :param md: Nd-array. Modulation
     :param phinterval: array contains the max and min of phase to normalize the phase image
@@ -564,42 +563,56 @@ def color_normalization(md, ph, phinterval=np.asarray([0, 360]), mdinterval=np.a
     :return: rgb the colored image in RGB space
     :return: hsv the colored image in HSV space
     """
-    if not ((len(ph.shape) == 2) and (len(md.shape) == 2)):
+    if not (len(ph.shape) == 2):
         raise ValueError("Dimension error in phase matrix or modulation matrix")
     if not (ph.shape == md.shape):
-        raise ValueError("Phase and Modulation matrix: Dimension not match")
-    if not (len(phinterval) == 2 and len(mdinterval) == 2):
-        raise ValueError("phinterval or mdinterval: arrays length is not 2")
+        raise ValueError("Phase or Modulation matrix: Dimension not match")
+    if not (len(phinterval) == 2):
+        raise ValueError("ph interval is not 2d array")
 
     hsv = np.ones([ph.shape[0], ph.shape[1], 3])
     rgb = np.zeros(hsv.shape)
-    for i in range(hsv.shape[0]):
-        for j in range(hsv.shape[1]):
-            if ph[i][j] == 0:
-                hsv[i][j][:] = (0, 0, 0)  # set hvs to 0 and rgb is already 0 in its 3 coordinates
-                rgb[i][j][:] = (0, 0, 0)
-            if threshold:
-                if (phinterval[0] <= ph[i][j] <= phinterval[1]) and (mdinterval[0] <= md[i][j] <= mdinterval[1]):
-                    hsv[i][j][0] = 0.95 * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
-                    hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
-                    if modulation:
-                        rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
+    if md:
+        for i in range(hsv.shape[0]):
+            for j in range(hsv.shape[1]):
+                if outlier_cut:  # cut off the outliers so set them to black value is zero
+                    if phinterval[0] <= ph[i][j] <= phinterval[1]:
+                        hsv[i][j][0] = color_scale * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
                     else:
-                        rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], 1, 1)
-
+                        hsv[i][j][:] = 0, 0, 0
+                else:  # in this case the outliers are put into the extremes 0 phase and maximum phase
+                    if phinterval[0] <= ph[i][j] <= phinterval[1]:
+                        hsv[i][j][0] = color_scale * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
+                    elif ph[i][j] == phinterval[0]:
+                        hsv[i][j][0] = 0
+                    elif ph[i][j] == phinterval[1]:
+                        hsv[i][j][0] = color_scale
+                rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], hsv[i][j][2])
+    else:
+        for i in range(hsv.shape[0]):
+            for j in range(hsv.shape[1]):
+                if outlier_cut:
+                    if (phinterval[0] <= ph[i][j] <= phinterval[1]) and (mdinterval[0] <= md[i][j] <= mdinterval[1]):
+                        hsv[i][j][0] = color_scale * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
+                        hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
+                    else:
+                        hsv[i][j][:] = (0, 0, 0)
                 else:
-                    hsv[i][j][:] = (0, 0, 0)
-                    rgb[i][j][:] = (0, 0, 0)
+                    if phinterval[0] <= ph[i][j] <= phinterval[1]:
+                        hsv[i][j][0] = color_scale * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
+                    elif ph[i][j] == phinterval[0]:
+                        hsv[i][j][0] = 0
+                    elif ph[i][j] == phinterval[1]:
+                        hsv[i][j][0] = color_scale
 
-            else:
-                hsv[i][j][0] = 0.95 * (ph[i][j] - phinterval[0]) / abs(phinterval[0] - phinterval[1])
-                hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
-                if modulation:
-                    rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
-                else:
-                    rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], 1, 1)
-
-    return rgb, hsv
+                    if mdinterval[0] <= md[i][j] <= mdinterval[1]:
+                        hsv[i][j][1] = (md[i][j] - mdinterval[0]) / abs(mdinterval[0] - mdinterval[1])
+                    elif md[i][j] == mdinterval[0]:
+                        hsv[i][j][1] = 0
+                    elif md[i][j] == mdinterval[1]:
+                        hsv[i][j][1] = 1
+                rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], hsv[i][j][2])
+    return rgb
 
 
 def phasor_threshold(g, s, md, ph, phinterval, mdinterval):

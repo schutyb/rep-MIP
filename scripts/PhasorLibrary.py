@@ -437,34 +437,49 @@ def histogram_line(Ro, g, s, dc, ic, N=100, print_fractions=False):
     return ax
 
 
-def concatenate(im, m, n, hper=0.07, vper=0.05):
+def concatenate(im, m, n, hper=0.07, vper=0.05, bidirectional=False):
     """
         This function concatenate a stack image from mxn images create an m x n only image.
-    :param vper:
-    :param hper:
-    :param im: image stack to be concatenate, containing mxn images. The dimension is 1 x (nxm).
+    :param im: image stack to be concatenated, containing mxn images. The dimension is 1 x (nxm).
     :param m: number of vertical images
     :param n: number of horizontal images
+    :param hper: horizontal percentage of overlap
+    :param vper: vertical percentage of overlap
+    :param bidirectional: Optional, set true if the image tile are bidirectional array
     :return: concatenated image
     """
     d = im.shape[1]
-    aux = np.zeros([d * m, d * n])  # store the concatenated image
-
+    aux = np.zeros([d * m, d * n])  # create the matrix to store the concatenated image
     # Horizontal concatenate
     i = 0
     j = 0
     while j < m * n:
-        aux[i * d: i * d + d, 0:d] = im[j][0:, 0:d]  # store the first image horizontally
+        if bidirectional and ((j / n) % 2 == 1):
+            aux[i * d: i * d + d, 0:d] = im[j + (n - 1)][0:, 0:d]  # store the first image horizontally
+        else:
+            aux[i * d: i * d + d, 0:d] = im[j][0:, 0:d]  # store the first image horizontally
         k = 1
         acum = 0
-        while k < n:
-            ind1 = round(((1 - vper) + acum) * d)
-            ind2 = round(ind1 + vper * d)
-            ind3 = round(ind2 + (1 - vper) * d)
-            aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + k][0:, 0:round(vper * d)]) / 2
-            aux[i * d:i * d + d, ind2:ind3] = im[j + k][0:, round(vper * d):d]
-            acum = (1 - vper) + acum
-            k = k + 1
+        if bidirectional and ((j / n) % 2 == 1):
+            while k < n:
+                ind1 = round(((1 - vper) + acum) * d)
+                ind2 = round(ind1 + vper * d)
+                ind3 = round(ind2 + (1 - vper) * d)
+                aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + (n - k - 1)][0:,
+                                                                                     0:round(vper * d)]) / 2
+                aux[i * d:i * d + d, ind2:ind3] = im[j + (n - k - 1)][0:, round(vper * d):d]
+                acum = (1 - vper) + acum
+                k = k + 1
+        else:
+            while k < n:
+                ind1 = round(((1 - vper) + acum) * d)
+                ind2 = round(ind1 + vper * d)
+                ind3 = round(ind2 + (1 - vper) * d)
+                aux[i * d:i * d + d, ind1:ind2] = (aux[i * d:i * d + d, ind1:ind2] + im[j + k][0:,
+                                                                                     0:round(vper * d)]) / 2
+                aux[i * d:i * d + d, ind2:ind3] = im[j + k][0:, round(vper * d):d]
+                acum = (1 - vper) + acum
+                k = k + 1
         i = i + 1
         j = j + n
 

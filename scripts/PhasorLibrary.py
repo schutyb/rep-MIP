@@ -309,6 +309,54 @@ def phasor_plot(dc, g, s, ic=None, title=None, xlabel=None, same_phasor=False):
         raise ValueError("dc and ic have different length")
 
 
+def circle_lines(ax, phase):
+    """
+        Built the figure inner and outer circle and the 45 degrees lines in the plot
+    :param phase: array containing the 5 phases in degrees to plot the lines
+    :param ax: axis where to plot the phasor circle.
+    :return: the axis with the added circle.
+    """
+    x1 = np.linspace(start=-1, stop=1, num=500)
+    yp1 = lambda x1: np.sqrt(1 - x1 ** 2)
+    yn1 = lambda x1: -np.sqrt(1 - x1 ** 2)
+    x2 = np.linspace(start=-0.5, stop=0.5, num=500)
+    yp2 = lambda x2: np.sqrt(0.5 ** 2 - x2 ** 2)
+    yn2 = lambda x2: -np.sqrt(0.5 ** 2 - x2 ** 2)
+    x3 = np.linspace(start=-1, stop=1, num=30)
+    #  circle
+    ax.plot(x1, list(map(yp1, x1)), color='darkgoldenrod')
+    ax.plot(x1, list(map(yn1, x1)), color='darkgoldenrod')
+    ax.plot(x2, list(map(yp2, x2)), color='darkgoldenrod')
+    ax.plot(x2, list(map(yn2, x2)), color='darkgoldenrod')
+    #  x = 0 and y = 0
+    ax.scatter(x3, [0] * len(x3), marker='_', color='darkgoldenrod')
+    ax.scatter([0] * len(x3), x3, marker='|', color='darkgoldenrod')
+    theta = np.pi / 180
+    #  lines
+    x11 = np.linspace(start=0, stop=0.34, num=100)
+    x12 = np.linspace(start=0, stop=0.21, num=100)
+    x13 = np.linspace(start=-0.173, stop=0, num=100)
+    x14 = np.linspace(start=-0.5, stop=0, num=100)
+    x15 = np.linspace(start=-0.70, stop=0, num=100)
+    ax.plot(x11, np.tan(phase[0] * theta) * x11, color='red')
+    ax.plot(x12, np.tan(phase[1] * theta) * x12, color='lime')
+    ax.plot(x13, np.tan(phase[2] * theta) * x13, color='cyan')
+    ax.plot(x14, np.tan(phase[3] * theta) * x14, color='mediumslateblue')
+    ax.plot(x15, np.tan(phase[4] * theta) * x15, color='mediumvioletred')
+    return ax
+
+
+def phasor_figure(x, y, phases=None, circle_plot=False, phases_lines=False):
+    fig, ax = plt.subplots(figsize=(8, 8))
+    fig.suptitle('Phasor')
+    ax.hist2d(x, y, bins=256, cmap="RdYlGn_r", norm=colors.LogNorm(), range=[[-1, 1], [-1, 1]])
+    if circle_plot:
+        phasor_circle(ax)
+    if phases_lines:
+        circle_lines(ax, phases)
+    return fig
+
+
 def interactive(dc, g, s, Ro):
     """
         This function plot the avg image, its histogram, the phasors and the rbg pseudocolor image.
@@ -521,7 +569,7 @@ def psnr(img_optimal, img):
     return psnr_aux
 
 
-def segment_thresholding(hist, bins, per):
+def segment_thresholding(hist, bins, per, complete_hist=False):
     """
         Given a histogram and a percentage the function returns a cut histogram
         preserving the values where the histogram is over the percentage * max(hist)
@@ -543,8 +591,10 @@ def segment_thresholding(hist, bins, per):
         for ind in range(len(hist)):
             if hist[ind] > round(per * max(hist)):
                 acum.append(bins[ind])
-
-    return np.asarray([min(acum), max(acum)])
+    if complete_hist:
+        return np.asarray(acum), np.asarray([min(acum), max(acum)])
+    else:
+        return np.asarray([min(acum), max(acum)])
 
 
 def im_thresholding(im, x1, x2):

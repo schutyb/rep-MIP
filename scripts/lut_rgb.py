@@ -12,18 +12,16 @@ import colorsys
 import csv
 
 
-hist_mod = tifffile.imread('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Data/Modelo_melanomas/hist_mod.ome.tiff')
-hist_ph = tifffile.imread('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Data/Modelo_melanomas/hist_phase.ome.tiff')
+hist_mod = tifffile.imread('/home/bruno/Documentos/Proyectos/Tesis/MIP-Data/Data-Model/hist_mod.ome.tiff')
+hist_ph = tifffile.imread('/home/bruno/Documentos/Proyectos/Tesis/MIP-Data/Data-Model/hist_phase.ome.tiff')
 
-per = 0.001
-auxph = PhLib.segment_thresholding(hist_ph[0], hist_ph[1], per)
-auxmd = PhLib.segment_thresholding(hist_mod[0], hist_mod[1], per)
+cal = False
+if cal:
+    per = 0.001
+    auxph, phinterval = PhLib.segment_thresholding(hist_ph[0], hist_ph[1], per, complete_hist=True)
+    auxmd, mdinterval = PhLib.segment_thresholding(hist_mod[0], hist_mod[1], per, complete_hist=True)
 
-# store the maximum and minimum of the segment that was given after the thresholding
-phinterval = np.asarray([min(auxph), max(auxph)])
-mdinterval = np.asarray([min(auxmd), max(auxmd)])
-
-plotty = True
+plotty = False
 if plotty:
     fig, ax = plt.subplots(1, 2, figsize=(12, 5))
     ax[0].bar(hist_mod[1], hist_mod[0], width=0.1, align='edge')
@@ -48,34 +46,32 @@ if plotty:
     rgb = np.zeros(hsv.shape)
     for i in range(len(auxph)):
         for j in range(len(auxmd)):
-            hsv[i][j][0] = 0.95 * (auxph[i] - min(auxph)) / abs(max(auxph) - min(auxph))
-            hsv[i][j][1] = (auxmd[j] - min(auxmd)) / abs(max(auxmd) - min(auxmd))
+            hsv[i][j][0] = 0.93 * (auxph[i] - min(auxph)) / abs(max(auxph) - min(auxph))
+            # hsv[i][j][1] = (auxmd[j] - min(auxmd)) / abs(max(auxmd) - min(auxmd))
             rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
 
-    # rgb lut plot
-    xlabels = np.zeros(10)
-    for i in range(len(xlabels)):
-        xlabels[i] = round(auxmd[i * int(len(auxmd) / (len(xlabels)))], 4)
+    rgb = np.flipud(rgb)
 
+    # rgb lut plot
     fig2, ax2 = plt.subplots(figsize=(10, 6))
-    ax2.imshow(rgb, interpolation='none', extent=[0, 180, phinterval[0], phinterval[1]])
+    ax2.imshow(rgb, interpolation='none', extent=[0, 20, phinterval[0], phinterval[1]])
     ax2.set_aspect(2)
-    ax2.set_xlabel('Modulation')
-    ax2.set_ylabel('Phase')
-    ax2.set_xticklabels(xlabels)
+    ax2.set_ylabel('Phase [degrees]')
+    ax2.xaxis.set_visible(False)
     plt.show()
 
     # store the rgb image into ome.tiff and the parameters of the model into csv
-    store = False
+    store = True
     if store:
         # store the rgb image
-        filename = '/home/bruno/Documentos/Proyectos/TESIS/TESIS/Data/Modelo_melanomas/rgb.ome.tiff'
+        filename = '/home/bruno/Documentos/Proyectos/Tesis/MIP-Data/Data-Model/rgb.ome.tiff'
         PhLib.generate_file(filename, rgb)
         # store the values of the model
         header = ['phase min', 'phase max', 'modulation min', 'modulation max']
         data = [round(min(auxph)), round(auxph[len(auxph) - 1]), round(min(auxmd), 4), round(auxmd[len(auxmd) - 1], 4)]
-        with open('/home/bruno/Documentos/Proyectos/TESIS/TESIS/Data/Modelo_melanomas/model_parameters.csv', 'w',
+        with open('/home/bruno/Documentos/Proyectos/Tesis/MIP-Data/Data-Model/model_parameters.csv', 'w',
                   encoding='UTF8') as f:
             writer = csv.writer(f)
             writer.writerow(header)
             writer.writerow(data)
+

@@ -50,7 +50,7 @@ if plotty:
             # hsv[i][j][1] = (auxmd[j] - min(auxmd)) / abs(max(auxmd) - min(auxmd))
             rgb[i][j][:] = colorsys.hsv_to_rgb(hsv[i][j][0], hsv[i][j][1], 1)
 
-    rgb = np.flipud(rgb)
+    # rgb = np.flipud(rgb)
 
     # rgb lut plot
     fig2, ax2 = plt.subplots(figsize=(10, 6))

@@ -26,12 +26,12 @@ im2 = np.array([im2a, im2b, im2c])
 
 # dejo un array de 810 con todas las imagenes
 
-im2 = np.reshape(im2, (810, 1024, 1024))
-im16 = np.reshape(im16, (810, 1024, 1024))
+im2 = np.reshape(im2, (810, 1024, 1024))[:, 60:980, :]
+im16 = np.reshape(im16, (810, 1024, 1024))[:, :920, :]
 
 sigma_stat = False
 if sigma_stat:
-    sigma = np.arange(0, 3, 0.25)
+    sigma = np.arange(0.5, 0.7, 0.05)
     val = np.zeros(len(im2))
     sg = np.zeros(len(sigma))
     for i in range(len(sigma)):
@@ -41,12 +41,19 @@ if sigma_stat:
         sg[i] = np.mean(val)
 
 # el filtrado optimo se da en sg = 0.75
-filt = gaussian(im2, sigma=0.75)
+num_chanel = 22
+filt = gaussian(im2[num_chanel], sigma=0.75, preserve_range=True).astype('int')
 
-plot = False
+plot = True
 if plot:
     fig, ax = plt.subplots(1, 3)
-    ax[0].imshow(im16[15], cmap='gray')
-    ax[1].imshow(im2[15], cmap='gray')
-    ax[2].imshow(filt[15], cmap='gray')
+    ax[0].imshow(im16[num_chanel])
+    ax[1].imshow(im2[num_chanel])
+    ax[2].imshow(filt)
+    ax[0].axis('off')
+    ax[1].axis('off')
+    ax[2].axis('off')
     plt.show()
+
+p1 = psnr(im16[num_chanel], im2[num_chanel])
+p2 = psnr(im16[num_chanel], filt)

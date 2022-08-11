@@ -26,8 +26,10 @@ im2 = np.array([im2a, im2b, im2c])
 
 # dejo un array de 810 con todas las imagenes
 
-im2 = np.reshape(im2, (810, 1024, 1024))[:, 60:980, :]
-im16 = np.reshape(im16, (810, 1024, 1024))[:, :920, :]
+# im2 = np.reshape(im2, (810, 1024, 1024))[:, 60:980, :]
+# im16 = np.reshape(im16, (810, 1024, 1024))[:, :920, :]
+im2 = np.reshape(im2, (810, 1024, 1024))
+im16 = np.reshape(im16, (810, 1024, 1024))
 
 sigma_stat = False
 if sigma_stat:
@@ -40,10 +42,11 @@ if sigma_stat:
             val[j] = psnr(im16[j], filt[j])
         sg[i] = np.mean(val)
 
+
 plot = False
 if plot:
     # el filtrado optimo se da en sg = 0.75
-    num_chanel = 45
+    num_chanel = 702
     filt = gaussian(im2[num_chanel], sigma=0.75, preserve_range=True).astype('int')
 
     fig, ax = plt.subplots(1, 3)
@@ -55,42 +58,54 @@ if plot:
     ax[2].axis('off')
     # p1 = psnr(im16[num_chanel], im2[num_chanel])
     # p2 = psnr(im16[num_chanel], filt)
+    plt.show()
 
-aux16 = PhasorLibrary.phasor(im16[690:719])
-aux2 = PhasorLibrary.phasor(im2[690:719])
-auxg = PhasorLibrary.phasor(gaussian(im2[690:719], sigma=0.75, preserve_range=True).astype('int'))
+calculos = True
+if calculos:
+    aux16 = PhasorLibrary.phasor(im16[690:719])
+    aux2 = PhasorLibrary.phasor(im2[690:719])
+    auxg = PhasorLibrary.phasor(gaussian(im2[690:719], sigma=0.75, preserve_range=True).astype('int'))
 
-# mediana
-i = 0
-auxm = np.copy(aux2)
-while i < 2:
-    auxm[1] = median(auxm[1])
-    auxm[2] = median(auxm[2])
-    i = i + 1
+    # mediana
+    i = 0
+    auxm = np.copy(aux2)
+    while i < 2:
+        auxm[1] = median(auxm[1])
+        auxm[2] = median(auxm[2])
+        i = i + 1
 
-dc = np.asarray([aux16[0], aux2[0], auxg[0], auxm[0]])
-g = np.asarray([aux16[1], aux2[1], auxg[1], auxm[1]])
-s = np.asarray([aux16[2], aux2[2], auxg[2], auxm[2]])
-PhasorLibrary.phasor_plot(dc, g, s, ic=2*np.ones(4), title=None, xlabel=None, same_phasor=False)
+    dc = np.asarray([aux16[0], aux2[0], auxg[0], auxm[0]])
+    g = np.asarray([aux16[1], aux2[1], auxg[1], auxm[1]])
+    s = np.asarray([aux16[2], aux2[2], auxg[2], auxm[2]])
+    PhasorLibrary.phasor_plot(dc, g, s, ic=2*np.ones(4), title=None, xlabel=None, same_phasor=False)
 
-gpsnr_comun = psnr(aux16[1], aux2[1])
-gpsnr_g = psnr(aux16[1], auxg[1])
-gpsnr_m = psnr(aux16[1], auxm[1])
+    gpsnr_comun = psnr(aux16[1], aux2[1])
+    gpsnr_g = psnr(aux16[1], auxg[1])
+    gpsnr_m = psnr(aux16[1], auxm[1])
 
-spsnr_comun = psnr(aux16[2], aux2[2])
-spsnr_g = psnr(aux16[2], auxg[2])
-spsnr_m = psnr(aux16[2], auxm[2])
+    spsnr_comun = psnr(aux16[2], aux2[2])
+    spsnr_g = psnr(aux16[2], auxg[2])
+    spsnr_m = psnr(aux16[2], auxm[2])
 
-print('PSNR G sin filtro', gpsnr_comun, 'PSNR G mediana', gpsnr_m, 'PSNR G gauss', gpsnr_g)
-print('PSNR S sin filtro', spsnr_comun, 'PSNR S mediana', spsnr_m, 'PSNR S gauss', spsnr_g)
+    print('PSNR G sin filtro', gpsnr_comun, 'PSNR G mediana', gpsnr_m, 'PSNR G gauss', gpsnr_g)
+    print('PSNR S sin filtro', spsnr_comun, 'PSNR S mediana', spsnr_m, 'PSNR S gauss', spsnr_g)
 
-rgbmed = PhasorLibrary.colored_image(auxm[4], [80, 120], md=None, mdinterval=None, outlier_cut=True, color_scale=0.92)
-rgbgauss = PhasorLibrary.colored_image(auxg[4], [80, 120], md=None, mdinterval=None, outlier_cut=True, color_scale=0.92)
+    # Calculo la fase para el nuevo G y S filtrados con la mediana
 
-fig2, ax2 = plt.subplots(1, 2)
-ax2[0].imshow(rgbmed)
-ax2[1].imshow(rgbgauss)
-ax2[0].axis('off')
-ax2[1].axis('off')
+    auxm[4] = np.angle(auxm[1] + 1j * auxm[2], deg=True)
 
-plt.show()
+    rgb16 = PhasorLibrary.colored_image(aux16[4], [80, 120], md=None, mdinterval=None, outlier_cut=True, color_scale=0.92)
+    rgb2 = PhasorLibrary.colored_image(aux2[4], [80, 120], md=None, mdinterval=None, outlier_cut=True, color_scale=0.92)
+    rgbmed = PhasorLibrary.colored_image(auxm[4], [80, 120], md=None, mdinterval=None, outlier_cut=True, color_scale=0.92)
+    rgbgauss = PhasorLibrary.colored_image(auxg[4], [80, 120], md=None, mdinterval=None, outlier_cut=True, color_scale=0.92)
+
+    fig2, ax2 = plt.subplots(2, 2)
+    ax2[0, 0].imshow(rgb16)
+    ax2[0, 1].imshow(rgb2)
+    ax2[1, 0].imshow(rgbgauss)
+    ax2[1, 1].imshow(rgbmed)
+    ax2[0, 0].axis('off')
+    ax2[0, 1].axis('off')
+    ax2[1, 0].axis('off')
+    ax2[1, 1].axis('off')
+    plt.show()
